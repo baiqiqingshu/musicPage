@@ -268,7 +268,8 @@
         }
         .playback-stage { display: contents; }
         .fullscreen-toolbar { display: none; }
-        .fullscreen-entry { flex-shrink: 0; border-color: #53685b; border-radius: 10px; }
+        .fullscreen-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 22px; }
+        .fullscreen-mode-btn { min-width: 0; min-height: 44px; font-size: 12px; }
         .playback-stage.is-expanded {
             position: fixed;
             inset: 0;
@@ -474,11 +475,15 @@
 
             <div class="playback-stage" id="playbackStage" tabindex="-1">
                 <div class="fullscreen-toolbar">
-                    <div><h2 id="fullscreenTitle">全屏播放</h2><p>沉浸聆听 · Esc 可退出</p></div>
+                    <div><h2 id="fullscreenTitle">网页全屏</h2><p id="fullscreenDescription">仅铺满网页 · Esc 可退出</p></div>
                     <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><i class="fas fa-compress" aria-hidden="true"></i><span>退出全屏</span></button>
                 </div>
             <section class="player-section" id="player" aria-labelledby="playerTitle">
-                <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span><button class="control-btn fullscreen-entry" id="fullscreenBtn" type="button" onclick="enterFullscreenPlayback()" aria-controls="playbackStage" aria-expanded="false" title="全屏播放"><i class="fas fa-expand" aria-hidden="true"></i><span class="sr-only">全屏播放</span></button></div>
+                <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span></div>
+                <div class="fullscreen-entry fullscreen-actions" role="group" aria-label="播放全屏模式">
+                    <button class="download-btn fullscreen-mode-btn" id="fullscreenBtn" type="button" onclick="enterFullscreenPlayback('page')" aria-controls="playbackStage" aria-expanded="false" aria-label="网页全屏，保留浏览器栏" title="网页全屏：仅铺满网页，保留浏览器栏"><i class="far fa-window-maximize" aria-hidden="true"></i><span>网页全屏</span></button>
+                    <button class="download-btn fullscreen-mode-btn" id="screenFullscreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-controls="playbackStage" aria-expanded="false" aria-label="屏幕全屏，铺满整个屏幕" title="屏幕全屏：铺满整个屏幕，隐藏浏览器栏"><i class="fas fa-expand" aria-hidden="true"></i><span>屏幕全屏</span></button>
+                </div>
                 <div class="current-song">
                     <div class="current-cover-container">
                         <img class="current-cover" id="currentCover" width="174" height="174" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3CradialGradient id='r'%3E%3Cstop stop-color='%23374b38'/%3E%3Cstop offset='1' stop-color='%2321372b'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='100' fill='url(%23r)'/%3E%3Cg fill='none' stroke='%2342583f' stroke-width='1'%3E%3Ccircle cx='100' cy='100' r='89'/%3E%3Ccircle cx='100' cy='100' r='83'/%3E%3Ccircle cx='100' cy='100' r='77'/%3E%3Ccircle cx='100' cy='100' r='71'/%3E%3Ccircle cx='100' cy='100' r='65'/%3E%3Ccircle cx='100' cy='100' r='59'/%3E%3C/g%3E%3Ccircle cx='100' cy='100' r='35' fill='%23b3c597'/%3E%3Ccircle cx='100' cy='100' r='30' fill='none' stroke='%2397ac7d'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%2321372b'/%3E%3C/svg%3E" alt="等待播放的唱片">
@@ -676,6 +681,7 @@
         const currentCover = document.getElementById('currentCover');
         const playbackStage = document.getElementById('playbackStage');
         let fullscreenExpanded = false;
+        let fullscreenTargetMode = null;
         let fullscreenNative = false;
         let fullscreenRequestPending = false;
         let fullscreenExitPending = false;
@@ -1166,6 +1172,14 @@
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
+        function setPlaybackFullscreenMode(mode, description) {
+            playbackStage.dataset.fullscreenMode = mode;
+            document.getElementById('fullscreenTitle').textContent = mode === 'screen' ? '屏幕全屏' : '网页全屏';
+            document.getElementById('fullscreenDescription').textContent = description || (mode === 'screen'
+                ? '沉浸聆听 · Esc 可退出屏幕全屏'
+                : '保留浏览器栏 · Esc 可退出网页全屏');
+        }
+
         function expandPlaybackStage() {
             if (fullscreenExpanded) return;
             fullscreenSnapshot = {
@@ -1183,7 +1197,9 @@
             playbackStage.setAttribute('role', 'dialog');
             playbackStage.setAttribute('aria-modal', 'true');
             playbackStage.setAttribute('aria-labelledby', 'fullscreenTitle');
-            document.getElementById('fullscreenBtn').setAttribute('aria-expanded', 'true');
+            for (const id of ['fullscreenBtn', 'screenFullscreenBtn']) {
+                document.getElementById(id).setAttribute('aria-expanded', 'true');
+            }
             document.body.style.position = 'fixed';
             document.body.style.top = `${-fullscreenSnapshot.y}px`;
             document.body.style.left = `${-fullscreenSnapshot.x}px`;
@@ -1206,11 +1222,14 @@
             const snapshot = fullscreenSnapshot;
             fullscreenSnapshot = null;
             playbackStage.classList.remove('is-expanded');
+            delete playbackStage.dataset.fullscreenMode;
             document.body.classList.remove('fullscreen-playback');
             playbackStage.removeAttribute('role');
             playbackStage.removeAttribute('aria-modal');
             playbackStage.removeAttribute('aria-labelledby');
-            document.getElementById('fullscreenBtn').setAttribute('aria-expanded', 'false');
+            for (const id of ['fullscreenBtn', 'screenFullscreenBtn']) {
+                document.getElementById(id).setAttribute('aria-expanded', 'false');
+            }
             for (const [element, inert] of snapshot.background) {
                 if (inert === null) element.removeAttribute('inert');
                 else element.setAttribute('inert', inert);
@@ -1224,12 +1243,26 @@
             window.scrollTo({ left: snapshot.x, top: snapshot.y, behavior: 'instant' });
         }
 
-        async function enterFullscreenPlayback() {
-            if (fullscreenExpanded || fullscreenExitPending) return;
+        async function enterFullscreenPlayback(mode = 'page') {
+            if (fullscreenExpanded) return;
+            fullscreenTargetMode = mode === 'screen' ? 'screen' : 'page';
             expandPlaybackStage();
-            if (document.fullscreenElement === playbackStage || fullscreenRequestPending) return;
+            setPlaybackFullscreenMode('page');
+            if (fullscreenTargetMode === 'page') {
+                if (document.fullscreenElement === playbackStage) await releaseNativeFullscreen();
+                return;
+            }
+            if (document.fullscreenElement === playbackStage) {
+                fullscreenNative = true;
+                setPlaybackFullscreenMode('screen');
+                return;
+            }
+            setPlaybackFullscreenMode('page', '正在请求屏幕全屏 · Esc 可取消');
+            if (fullscreenRequestPending) return;
             if (typeof playbackStage.requestFullscreen !== 'function') {
-                showNotification('此浏览器不支持原生全屏，已启用沉浸播放；可按 Esc 或点击退出返回', 'info');
+                fullscreenTargetMode = 'page';
+                setPlaybackFullscreenMode('page', '浏览器不支持屏幕全屏，已转为网页全屏 · Esc 可退出');
+                showNotification('此浏览器不支持屏幕全屏，已转为网页全屏，保留浏览器栏', 'info');
                 return;
             }
             fullscreenRequestPending = true;
@@ -1237,55 +1270,74 @@
                 await playbackStage.requestFullscreen();
                 if (document.fullscreenElement === playbackStage) {
                     fullscreenNative = true;
-                    // A request can finish after the user has already closed immersive mode.
-                    if (!fullscreenExpanded) exitFullscreenPlayback();
+                    setPlaybackFullscreenMode('screen');
+                    // A late native request must not override a newer page-mode or exit intent.
+                    if (fullscreenTargetMode !== 'screen') await releaseNativeFullscreen();
                 }
             } catch (error) {
-                if (fullscreenExpanded) {
-                    showNotification('浏览器未允许原生全屏，已启用沉浸播放；可按 Esc 或点击退出返回', 'info');
+                if (fullscreenTargetMode === 'screen') {
+                    fullscreenTargetMode = 'page';
+                    setPlaybackFullscreenMode('page', '浏览器未允许屏幕全屏，已转为网页全屏 · Esc 可退出');
+                    showNotification('浏览器未允许屏幕全屏，已转为网页全屏，保留浏览器栏', 'info');
                 }
             } finally {
                 fullscreenRequestPending = false;
             }
         }
 
-        async function exitFullscreenPlayback() {
+        async function releaseNativeFullscreen() {
             if (fullscreenExitPending) return;
-            if (document.fullscreenElement !== playbackStage) {
-                collapsePlaybackStage();
-                return;
-            }
             fullscreenExitPending = true;
+            let failed = false;
             try {
                 await document.exitFullscreen();
-                if (document.fullscreenElement !== playbackStage) {
-                    fullscreenNative = false;
-                    collapsePlaybackStage();
-                } else {
-                    expandPlaybackStage();
-                    showNotification('浏览器尚未退出全屏，请按 Esc 或再次点击退出', 'warning');
-                }
             } catch (error) {
-                if (document.fullscreenElement === playbackStage) {
-                    // Keep an operable exit button if the browser refuses to leave native fullscreen.
-                    expandPlaybackStage();
-                    showNotification('未能退出浏览器全屏，请按 Esc 或再次点击退出', 'warning');
-                } else {
-                    fullscreenNative = false;
-                    collapsePlaybackStage();
-                }
+                failed = true;
             } finally {
                 fullscreenExitPending = false;
+            }
+            if (document.fullscreenElement === playbackStage) {
+                // Preserve an operable exit control and describe the actual native state on failure.
+                fullscreenNative = true;
+                expandPlaybackStage();
+                setPlaybackFullscreenMode('screen', '浏览器尚未退出屏幕全屏 · 请按 Esc 或再次点击退出');
+                showNotification(failed ? '未能退出屏幕全屏，请按 Esc 或再次点击退出' : '浏览器尚未退出屏幕全屏，请按 Esc 或再次点击退出', 'warning');
+            } else {
+                fullscreenNative = false;
+                if (fullscreenTargetMode === 'page') {
+                    expandPlaybackStage();
+                    setPlaybackFullscreenMode('page');
+                } else if (fullscreenTargetMode === null) {
+                    collapsePlaybackStage();
+                }
+            }
+        }
+
+        async function exitFullscreenPlayback() {
+            fullscreenTargetMode = null;
+            if (document.fullscreenElement === playbackStage) {
+                await releaseNativeFullscreen();
+            } else {
+                collapsePlaybackStage();
             }
         }
 
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement === playbackStage) {
                 fullscreenNative = true;
-                if (!fullscreenExpanded) exitFullscreenPlayback();
-            } else if (fullscreenNative) {
+                expandPlaybackStage();
+                setPlaybackFullscreenMode('screen');
+                if (fullscreenTargetMode !== 'screen') releaseNativeFullscreen();
+            } else {
+                const wasNative = fullscreenNative;
                 fullscreenNative = false;
-                collapsePlaybackStage();
+                if (fullscreenTargetMode === 'page') {
+                    expandPlaybackStage();
+                    setPlaybackFullscreenMode('page');
+                } else if (wasNative || fullscreenTargetMode === null) {
+                    fullscreenTargetMode = null;
+                    collapsePlaybackStage();
+                }
             }
         });
 
