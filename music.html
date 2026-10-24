@@ -169,7 +169,7 @@
         .lyrics-section .section-heading { margin-bottom: 14px; }
         .lyrics-section .section-title { font-size: 15px; }
         .lyrics-kicker { font-size: 9px; letter-spacing: .15em; color: var(--muted); }
-        .lyrics-container { height: 216px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c2ceba transparent; }
+        .lyrics-container { position: relative; height: 216px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c2ceba transparent; }
         .lyric-line { border-left: 2px solid transparent; border-radius: 4px; padding: 8px 10px; margin-bottom: 4px; color: #6d7869; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
         .lyric-line[onclick], .lyric-line[role='button'] { cursor: pointer; }
         .lyric-line:hover { background: #e2e8da; }
@@ -266,6 +266,108 @@
             .lyrics-section { border-radius: 18px; padding: 20px; }
             .page-footer { flex-direction: column; gap: 4px; text-align: center; padding-top: 20px; font-size: 10px; }
         }
+        .playback-stage { display: contents; }
+        .fullscreen-toolbar { display: none; }
+        .fullscreen-entry { flex-shrink: 0; border-color: #53685b; border-radius: 10px; }
+        .playback-stage.is-expanded {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: grid;
+            grid-template-columns: minmax(0, 500px) minmax(0, 600px);
+            grid-template-rows: auto auto;
+            justify-content: center;
+            align-content: start;
+            align-items: start;
+            column-gap: clamp(24px, 5vw, 88px);
+            row-gap: 24px;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            margin: 0;
+            padding: 0 max(28px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px));
+            overflow-x: hidden;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scroll-padding-top: calc(112px + env(safe-area-inset-top, 0px));
+            scrollbar-width: thin;
+            scrollbar-color: #536f5e #142b23;
+            color-scheme: dark;
+            color: #f3f5ed;
+            background: radial-gradient(ellipse at 20% 45%, #294b37 0, transparent 60%), #142b23;
+        }
+        .playback-stage:fullscreen { width: 100%; height: 100%; border: 0; }
+        .playback-stage::backdrop { background: #142b23; }
+        .playback-stage.is-expanded .fullscreen-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-width: 0;
+            padding: calc(18px + env(safe-area-inset-top, 0px)) 0 18px;
+            border-bottom: 1px solid #45604e;
+            background: #142b23;
+        }
+        .playback-stage.is-expanded .fullscreen-toolbar > div { min-width: 0; }
+        .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 18px; font-weight: 550; letter-spacing: .06em; overflow-wrap: anywhere; }
+        .playback-stage.is-expanded .fullscreen-toolbar p { margin-top: 2px; color: var(--dark-muted); font-size: 12px; }
+        .playback-stage.is-expanded .fullscreen-exit { flex-shrink: 0; min-height: 44px; padding: 10px 16px; border-color: #8ca780; color: #f3f5ed; font-size: 13px; }
+        .playback-stage.is-expanded .fullscreen-entry { display: none; }
+        .playback-stage.is-expanded :focus-visible { outline-color: var(--mint); }
+        .playback-stage.is-expanded .player-section { width: 100%; padding: 8px 24px 24px; border-radius: 0; background: transparent; }
+        .playback-stage.is-expanded .player-heading { margin-bottom: 18px; }
+        .playback-stage.is-expanded .player-heading h2, .playback-stage.is-expanded .playback-status { font-size: 12px; }
+        .playback-stage.is-expanded .current-cover-container { margin-bottom: 18px; }
+        .playback-stage.is-expanded .current-cover { width: clamp(210px, 28vh, 320px); height: auto; aspect-ratio: 1; border-width: 9px; box-shadow: 0 22px 48px #071b1260; }
+        .playback-stage.is-expanded .current-info h3 { font-size: clamp(22px, 2.1vw, 30px); line-height: 1.35; }
+        .playback-stage.is-expanded .current-info p { margin: 6px 0 12px; font-size: 13px; }
+        .playback-stage.is-expanded .favorite-current, .playback-stage.is-expanded .quality-select, .playback-stage.is-expanded .download-btn { min-height: 44px; font-size: 12px; }
+        .playback-stage.is-expanded .player-controls { gap: 28px; margin: 18px 0 12px; }
+        .playback-stage.is-expanded .play-btn { width: 64px; height: 64px; }
+        .playback-stage.is-expanded .player-section .progress-container,
+        .playback-stage.is-expanded .player-section .quality-container,
+        .playback-stage.is-expanded .player-section .volume-container,
+        .playback-stage.is-expanded .player-section .download-container { width: 100%; max-width: none; }
+        .playback-stage.is-expanded .quality-container { margin-top: 18px; padding-top: 14px; }
+        .playback-stage.is-expanded .quality-select { flex: 1; width: 0; max-width: 210px; }
+        .playback-stage.is-expanded .volume-container { margin-top: 10px; margin-bottom: 14px; }
+        .playback-stage.is-expanded .lyrics-section { width: 100%; padding: clamp(22px, 3vw, 40px); border-color: #46614f; background: #1b352b; }
+        .playback-stage.is-expanded .lyrics-section .section-heading { flex-wrap: wrap; margin-bottom: 24px; }
+        .playback-stage.is-expanded .lyrics-section .section-title { font-size: 18px; }
+        .playback-stage.is-expanded .lyrics-kicker { color: var(--dark-muted); }
+        .playback-stage.is-expanded .lyrics-container { height: clamp(320px, 58vh, 660px); height: clamp(320px, 58dvh, 660px); scroll-padding-block: 20px; scrollbar-color: #647f65 transparent; }
+        .playback-stage.is-expanded .lyric-line { padding: 12px 16px; margin-bottom: 8px; color: #c0cec1; font-size: clamp(16px, 1.5vw, 21px); line-height: 1.85; }
+        .playback-stage.is-expanded .lyric-line:hover { background: #294636; }
+        .playback-stage.is-expanded .lyric-line.active { border-left-color: var(--mint); background: #304d37; color: #e0f3cb; }
+        .playback-stage.is-expanded .lyrics-empty { padding: 64px 8px; }
+        .playback-stage.is-expanded .lyrics-empty i { color: var(--mint); }
+        .playback-stage.is-expanded .lyrics-empty p { color: #e0e9da; font-size: 16px; }
+        .playback-stage.is-expanded .lyrics-empty span { color: var(--dark-muted); font-size: 12px; }
+        .playback-stage.is-expanded .notification { top: calc(88px + env(safe-area-inset-top, 0px)) !important; }
+        @media (max-width: 760px) {
+            .playback-stage.is-expanded { grid-template-columns: minmax(0, 520px); row-gap: 18px; padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+            .playback-stage.is-expanded .fullscreen-toolbar { gap: 12px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 12px; }
+            .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 16px; }
+            .playback-stage.is-expanded .fullscreen-toolbar p { font-size: 11px; }
+            .playback-stage.is-expanded .fullscreen-exit { padding: 9px 12px; font-size: 12px; }
+            .playback-stage.is-expanded .player-section { padding: 4px 16px 12px; }
+            .playback-stage.is-expanded .current-cover { width: clamp(174px, 48vw, 250px); }
+            .playback-stage.is-expanded .current-info h3 { font-size: 24px; }
+            .playback-stage.is-expanded .lyrics-section { padding: 22px 16px; }
+            .playback-stage.is-expanded .lyrics-container { height: 360px; height: clamp(240px, 50dvh, 420px); }
+            .playback-stage.is-expanded .lyric-line { padding: 10px 12px; font-size: 16px; }
+        }
+        @media (max-height: 540px) {
+            .playback-stage.is-expanded { row-gap: 16px; }
+            .playback-stage.is-expanded .fullscreen-toolbar { padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
+            .playback-stage.is-expanded .current-cover { width: 174px; }
+            .playback-stage.is-expanded .lyrics-container { height: 300px; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
             *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -370,8 +472,13 @@
                 <p class="library-note"><i class="fas fa-lock" aria-hidden="true"></i>收藏保存在当前浏览器，无需登录。</p>
             </section>
 
+            <div class="playback-stage" id="playbackStage" tabindex="-1">
+                <div class="fullscreen-toolbar">
+                    <div><h2 id="fullscreenTitle">全屏播放</h2><p>沉浸聆听 · Esc 可退出</p></div>
+                    <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><i class="fas fa-compress" aria-hidden="true"></i><span>退出全屏</span></button>
+                </div>
             <section class="player-section" id="player" aria-labelledby="playerTitle">
-                <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span></div>
+                <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span><button class="control-btn fullscreen-entry" id="fullscreenBtn" type="button" onclick="enterFullscreenPlayback()" aria-controls="playbackStage" aria-expanded="false" title="全屏播放"><i class="fas fa-expand" aria-hidden="true"></i><span class="sr-only">全屏播放</span></button></div>
                 <div class="current-song">
                     <div class="current-cover-container">
                         <img class="current-cover" id="currentCover" width="174" height="174" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3CradialGradient id='r'%3E%3Cstop stop-color='%23374b38'/%3E%3Cstop offset='1' stop-color='%2321372b'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='100' fill='url(%23r)'/%3E%3Cg fill='none' stroke='%2342583f' stroke-width='1'%3E%3Ccircle cx='100' cy='100' r='89'/%3E%3Ccircle cx='100' cy='100' r='83'/%3E%3Ccircle cx='100' cy='100' r='77'/%3E%3Ccircle cx='100' cy='100' r='71'/%3E%3Ccircle cx='100' cy='100' r='65'/%3E%3Ccircle cx='100' cy='100' r='59'/%3E%3C/g%3E%3Ccircle cx='100' cy='100' r='35' fill='%23b3c597'/%3E%3Ccircle cx='100' cy='100' r='30' fill='none' stroke='%2397ac7d'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%2321372b'/%3E%3C/svg%3E" alt="等待播放的唱片">
@@ -415,6 +522,7 @@
                     <div class="lyrics-empty"><i class="fas fa-quote-left" aria-hidden="true"></i><p>旋律之外，还有文字</p><span>播放歌曲后，歌词将在这里同步呈现</span></div>
                 </div>
             </section>
+            </div>
         </div>
         <footer class="page-footer"><span>云音乐 · 让每一段日常，都有自己的背景音乐</span><span>音乐内容由所选来源提供</span></footer>
     </main>
@@ -566,6 +674,12 @@
         const totalTimeSpan = document.getElementById('totalTime');
         const lyricsContainer = document.getElementById('lyricsContainer');
         const currentCover = document.getElementById('currentCover');
+        const playbackStage = document.getElementById('playbackStage');
+        let fullscreenExpanded = false;
+        let fullscreenNative = false;
+        let fullscreenRequestPending = false;
+        let fullscreenExitPending = false;
+        let fullscreenSnapshot = null;
         
         const canvas = document.getElementById('waveCanvas');
         const canvasCtx = canvas.getContext('2d');
@@ -1052,13 +1166,163 @@
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
+        function expandPlaybackStage() {
+            if (fullscreenExpanded) return;
+            fullscreenSnapshot = {
+                focus: document.activeElement,
+                x: window.scrollX,
+                y: window.scrollY,
+                background: [],
+                styles: ['position', 'top', 'left', 'width', 'overflow'].map(property => [
+                    property, document.body.style.getPropertyValue(property), document.body.style.getPropertyPriority(property)
+                ])
+            };
+            fullscreenExpanded = true;
+            playbackStage.classList.add('is-expanded');
+            document.body.classList.add('fullscreen-playback');
+            playbackStage.setAttribute('role', 'dialog');
+            playbackStage.setAttribute('aria-modal', 'true');
+            playbackStage.setAttribute('aria-labelledby', 'fullscreenTitle');
+            document.getElementById('fullscreenBtn').setAttribute('aria-expanded', 'true');
+            document.body.style.position = 'fixed';
+            document.body.style.top = `${-fullscreenSnapshot.y}px`;
+            document.body.style.left = `${-fullscreenSnapshot.x}px`;
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+            for (let branch = playbackStage; branch !== document.body; branch = branch.parentElement) {
+                for (const sibling of branch.parentElement.children) {
+                    if (sibling === branch || sibling.matches('script, style, link')) continue;
+                    fullscreenSnapshot.background.push([sibling, sibling.getAttribute('inert')]);
+                    sibling.setAttribute('inert', '');
+                }
+            }
+            playbackStage.scrollTop = 0;
+            document.getElementById('exitFullscreenBtn').focus({ preventScroll: true });
+        }
+
+        function collapsePlaybackStage() {
+            if (!fullscreenExpanded) return;
+            fullscreenExpanded = false;
+            const snapshot = fullscreenSnapshot;
+            fullscreenSnapshot = null;
+            playbackStage.classList.remove('is-expanded');
+            document.body.classList.remove('fullscreen-playback');
+            playbackStage.removeAttribute('role');
+            playbackStage.removeAttribute('aria-modal');
+            playbackStage.removeAttribute('aria-labelledby');
+            document.getElementById('fullscreenBtn').setAttribute('aria-expanded', 'false');
+            for (const [element, inert] of snapshot.background) {
+                if (inert === null) element.removeAttribute('inert');
+                else element.setAttribute('inert', inert);
+            }
+            for (const [property, value, priority] of snapshot.styles) {
+                if (value) document.body.style.setProperty(property, value, priority);
+                else document.body.style.removeProperty(property);
+            }
+            const focus = snapshot.focus && snapshot.focus.isConnected ? snapshot.focus : document.getElementById('fullscreenBtn');
+            focus.focus({ preventScroll: true });
+            window.scrollTo({ left: snapshot.x, top: snapshot.y, behavior: 'instant' });
+        }
+
+        async function enterFullscreenPlayback() {
+            if (fullscreenExpanded || fullscreenExitPending) return;
+            expandPlaybackStage();
+            if (document.fullscreenElement === playbackStage || fullscreenRequestPending) return;
+            if (typeof playbackStage.requestFullscreen !== 'function') {
+                showNotification('此浏览器不支持原生全屏，已启用沉浸播放；可按 Esc 或点击退出返回', 'info');
+                return;
+            }
+            fullscreenRequestPending = true;
+            try {
+                await playbackStage.requestFullscreen();
+                if (document.fullscreenElement === playbackStage) {
+                    fullscreenNative = true;
+                    // A request can finish after the user has already closed immersive mode.
+                    if (!fullscreenExpanded) exitFullscreenPlayback();
+                }
+            } catch (error) {
+                if (fullscreenExpanded) {
+                    showNotification('浏览器未允许原生全屏，已启用沉浸播放；可按 Esc 或点击退出返回', 'info');
+                }
+            } finally {
+                fullscreenRequestPending = false;
+            }
+        }
+
+        async function exitFullscreenPlayback() {
+            if (fullscreenExitPending) return;
+            if (document.fullscreenElement !== playbackStage) {
+                collapsePlaybackStage();
+                return;
+            }
+            fullscreenExitPending = true;
+            try {
+                await document.exitFullscreen();
+                if (document.fullscreenElement !== playbackStage) {
+                    fullscreenNative = false;
+                    collapsePlaybackStage();
+                } else {
+                    expandPlaybackStage();
+                    showNotification('浏览器尚未退出全屏，请按 Esc 或再次点击退出', 'warning');
+                }
+            } catch (error) {
+                if (document.fullscreenElement === playbackStage) {
+                    // Keep an operable exit button if the browser refuses to leave native fullscreen.
+                    expandPlaybackStage();
+                    showNotification('未能退出浏览器全屏，请按 Esc 或再次点击退出', 'warning');
+                } else {
+                    fullscreenNative = false;
+                    collapsePlaybackStage();
+                }
+            } finally {
+                fullscreenExitPending = false;
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement === playbackStage) {
+                fullscreenNative = true;
+                if (!fullscreenExpanded) exitFullscreenPlayback();
+            } else if (fullscreenNative) {
+                fullscreenNative = false;
+                collapsePlaybackStage();
+            }
+        });
+
+        document.addEventListener('focusin', event => {
+            if (fullscreenExpanded && !playbackStage.contains(event.target)) {
+                document.getElementById('exitFullscreenBtn').focus({ preventScroll: true });
+            }
+        });
+
+        document.addEventListener('keydown', event => {
+            if (!fullscreenExpanded || event.isComposing) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                exitFullscreenPlayback();
+                return;
+            }
+            if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey) return;
+            const controls = [...playbackStage.querySelectorAll('button, [href], input, select, textarea, [tabindex]')]
+                .filter(element => element.tabIndex >= 0 && !element.matches(':disabled') &&
+                    !element.closest('[inert]') && element.getClientRects().length);
+            const first = controls[0] || playbackStage;
+            const last = controls[controls.length - 1] || playbackStage;
+            if (!playbackStage.contains(document.activeElement) || document.activeElement === playbackStage ||
+                (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
+                event.preventDefault();
+                (event.shiftKey ? last : first).focus({ preventScroll: true });
+            }
+        }, true);
+
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
             notification.setAttribute('role', type === 'error' ? 'alert' : 'status');
             notification.style.cssText = 'position:fixed;top:24px;left:16px;right:16px;width:max-content;max-width:calc(100vw - 32px);margin:0 auto;box-sizing:border-box;z-index:2000;opacity:0;transition:opacity .2s ease;overflow-wrap:anywhere;pointer-events:none;';
             notification.textContent = message;
-            document.body.appendChild(notification);
+            (fullscreenExpanded || document.fullscreenElement === playbackStage ? playbackStage : document.body).appendChild(notification);
             requestAnimationFrame(() => { notification.style.opacity = '1'; });
             setTimeout(() => {
                 notification.style.opacity = '0';
