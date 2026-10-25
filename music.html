@@ -329,6 +329,11 @@
         .lyrics-empty span { color: var(--dark-muted); font-size: 12px; }
         .playback-footer { min-width: 0; border-top: 1px solid #45604e; padding: 12px 22px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 22px; background: #142b23; }
         .player-controls { gap: 16px; margin: 0; }
+        .playback-mode-select { width: 104px; min-width: 0; min-height: 44px; flex-shrink: 0; border: 1px solid #54695b; border-radius: 9px; padding: 0 7px; color: #edf2e7; background: #263e30; font-size: 12px; }
+        .playback-mode-select option { color: #edf2e7; background: var(--dark); }
+        .queue-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+        .queue-toolbar .playback-mode-select { color: var(--green); background: var(--green-soft); border-color: #c8d9bd; }
+        .queue-toolbar .playback-mode-select option { color: var(--ink); background: var(--surface); }
         .play-btn { width: 56px; height: 56px; }
         .progress-container { min-width: 0; }
         .playback-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; min-width: 0; }
@@ -440,7 +445,7 @@
             .playback-stage.is-expanded .lyric-line { padding: 12px 8px; font-size: 18px; }
             .playback-stage.is-expanded .playback-footer { padding: 4px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); grid-template-columns: minmax(0, 1fr); gap: 2px; }
             .playback-stage.is-expanded .progress-container { grid-row: 1; }
-            .playback-stage.is-expanded .player-controls { grid-row: 2; gap: 32px; }
+            .playback-stage.is-expanded .player-controls { grid-row: 2; gap: clamp(8px, 2.5vw, 16px); }
             .playback-stage.is-expanded .playback-tools { grid-column: 1; gap: 8px; }
             .playback-stage.is-expanded .quality-label { display: none; }
             .playback-stage.is-expanded .quality-select { width: 118px; max-width: 100%; }
@@ -469,6 +474,7 @@
             .playback-stage.is-expanded .playback-footer { grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; padding: 6px 20px calc(6px + env(safe-area-inset-bottom, 0px)); }
             .playback-stage.is-expanded .player-controls, .playback-stage.is-expanded .progress-container { grid-row: auto; }
             .playback-stage.is-expanded .player-controls { gap: 8px; }
+            .playback-stage.is-expanded .player-controls .playback-mode-select { width: 96px; font-size: 11px; }
             .playback-stage.is-expanded .playback-tools { grid-column: auto; gap: 6px; }
             .playback-stage.is-expanded .quality-label, .playback-stage.is-expanded .volume-container { display: none; }
             .playback-stage.is-expanded .quality-select { width: 110px; }
@@ -565,6 +571,7 @@
                 <div class="list-heading"><span>歌曲 / 艺人</span><span id="resultsCount" aria-live="polite">等待你的第一首歌</span></div>
 
                 <div id="queueTab" class="tab-content">
+                    <div class="queue-toolbar"><label for="queueModeSelect">播放模式</label><select class="playback-mode-select" id="queueModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select></div>
                     <div class="search-results" id="queueResults">
                         <div class="empty-state"><i class="fas fa-list-ul" aria-hidden="true"></i><h3>下一首，由你决定</h3><p>从搜索、歌单或收藏中播放歌曲，<br>整份列表就会加入待播队列。</p></div>
                     </div>
@@ -636,6 +643,9 @@
 
             <div class="playback-footer" id="playbackFooter">
                 <div class="player-controls">
+                    <label for="playbackModeSelect" class="sr-only">播放模式</label>
+                    <select class="playback-mode-select" id="playbackModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)" title="顺序播放：按列表顺序播放，播完后停止"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select>
+                    <span id="playbackModeStatus" class="sr-only" role="status" aria-live="polite"></span>
                     <button class="control-btn small" id="prevSongBtn" type="button" onclick="previousSong()" aria-label="上一首" title="上一首" disabled><i class="fas fa-step-backward" aria-hidden="true"></i></button>
                     <button class="control-btn play-btn" id="playBtn" type="button" onclick="togglePlay()" aria-label="播放" title="播放 / 暂停" disabled><i class="fas fa-play" aria-hidden="true"></i></button>
                     <button class="control-btn small" id="nextSongBtn" type="button" onclick="nextSong()" aria-label="下一首" title="下一首" disabled><i class="fas fa-step-forward" aria-hidden="true"></i></button>
@@ -697,6 +707,17 @@
         let activeTab = 'search';
         const FAVORITES_KEY = 'musicPage.favorites.v1';
         let favorites = [];
+        const PLAYBACK_MODE_KEY = 'musicPage.playbackMode.v1';
+        const PLAYBACK_MODES = {
+            sequence: { label: '顺序播放', description: '按列表顺序播放，播完后停止' },
+            'repeat-all': { label: '列表循环', description: '播完最后一首后，从第一首继续' },
+            'repeat-one': { label: '单曲循环', description: '自动重播当前歌曲，仍可手动切歌' },
+            shuffle: { label: '随机播放', description: '每轮随机播完所有歌曲，上一首返回播放历史' }
+        };
+        let playbackMode = 'sequence';
+        let shuffleRemaining = [];
+        let shuffleHistory = [];
+        let shuffleHistoryPosition = -1;
 
         function songIdentity(song) {
             return song ? JSON.stringify([song.source, String(song.id)]) : '';
@@ -958,10 +979,12 @@
         async function playSong(index, playlist, options = {}) {
             if (!playlist || index < 0 || index >= playlist.length) return;
             const request = ++playbackRequest;
+            const previousIndex = currentIndex;
             const queueChanged = currentPlaylist.length !== playlist.length ||
                 currentPlaylist.some((song, position) => songIdentity(song) !== songIdentity(playlist[position]));
             currentPlaylist = playlist.slice();
             currentIndex = index;
+            if (queueChanged || (playbackMode === 'shuffle' && index !== previousIndex && !options.preserveShuffle)) resetShuffleState();
             if (queueChanged) displaySearchResults(currentPlaylist, 'queueResults');
             document.getElementById('queueCount').textContent = currentPlaylist.length;
             document.getElementById('fullscreenQueueCount').textContent = currentPlaylist.length;
@@ -1297,25 +1320,105 @@
             }
         }
 
+        function setPlaybackMode(mode, { persist = true, announce = true } = {}) {
+            if (!Object.prototype.hasOwnProperty.call(PLAYBACK_MODES, mode)) return;
+            const changed = playbackMode !== mode;
+            playbackMode = mode;
+            if (changed) resetShuffleState();
+            const { label, description } = PLAYBACK_MODES[mode];
+            document.querySelectorAll('[data-playback-mode]').forEach(select => {
+                select.value = mode;
+                select.title = `${label}：${description}`;
+            });
+            if (announce && changed) document.getElementById('playbackModeStatus').textContent = `${label}：${description}`;
+            if (persist) {
+                try {
+                    localStorage.setItem(PLAYBACK_MODE_KEY, mode);
+                } catch (error) {
+                    showNotification('播放模式已切换，但浏览器未能保存此偏好', 'warning');
+                }
+            }
+        }
+
+        function resetShuffleState() {
+            shuffleRemaining = currentPlaylist.map((_, index) => index).filter(index => index !== currentIndex);
+            shuffleHistory = currentIndex >= 0 ? [currentIndex] : [];
+            shuffleHistoryPosition = shuffleHistory.length - 1;
+        }
+
+        function nextShuffleIndex() {
+            // Going back in history must let Next retrace the same listening order.
+            if (shuffleHistoryPosition < shuffleHistory.length - 1) return shuffleHistory[++shuffleHistoryPosition];
+            if (!shuffleRemaining.length) shuffleRemaining = currentPlaylist.map((_, index) => index);
+            const candidates = shuffleRemaining.filter(index => index !== currentIndex);
+            const nextIndex = candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : currentIndex;
+            shuffleRemaining.splice(shuffleRemaining.indexOf(nextIndex), 1);
+            shuffleHistory.push(nextIndex);
+            shuffleHistoryPosition = shuffleHistory.length - 1;
+            return nextIndex;
+        }
+
+        async function restartCurrentSong() {
+            if (!audioPlayer.getAttribute('src')) return playSong(currentIndex, currentPlaylist, { preserveShuffle: true });
+            const request = playbackRequest;
+            audioPlayer.currentTime = 0;
+            progressFill.style.width = '0%';
+            currentTimeSpan.textContent = '0:00';
+            updateProgressAccessibility();
+            updateLyricHighlight(true);
+            try {
+                await audioPlayer.play();
+            } catch (error) {
+                if (request !== playbackRequest) return;
+                setPlaybackStatus('播放失败');
+                showNotification('重播失败，请点击播放重试', 'error');
+            }
+        }
+
         function previousSong() {
             if (currentIndex < 0) {
                 showNotification('请先选择要播放的歌曲', 'warning');
                 return;
             }
+            if (playbackMode === 'shuffle') {
+                if (shuffleHistoryPosition <= 0) {
+                    showNotification('还没有上一首随机播放记录', 'info');
+                    return;
+                }
+                return playSong(shuffleHistory[--shuffleHistoryPosition], currentPlaylist, { preserveShuffle: true });
+            }
             if (currentIndex > 0) {
-                playSong(currentIndex - 1, currentPlaylist);
+                return playSong(currentIndex - 1, currentPlaylist);
+            } else if (playbackMode === 'repeat-all' || playbackMode === 'repeat-one') {
+                if (currentPlaylist.length === 1) return restartCurrentSong();
+                return playSong(currentPlaylist.length - 1, currentPlaylist);
             } else {
                 showNotification('已经是第一首歌曲', 'info');
             }
         }
 
-        function nextSong() {
+        function nextSong({ automatic = false } = {}) {
             if (currentIndex < 0) {
-                showNotification('请先选择要播放的歌曲', 'warning');
+                if (!automatic) showNotification('请先选择要播放的歌曲', 'warning');
                 return;
             }
+            if (automatic && playbackMode === 'repeat-one') return restartCurrentSong();
+            if (playbackMode === 'shuffle') {
+                const nextIndex = nextShuffleIndex();
+                if (nextIndex === currentIndex) return restartCurrentSong();
+                return playSong(nextIndex, currentPlaylist, { preserveShuffle: true });
+            }
             if (currentIndex < currentPlaylist.length - 1) {
-                playSong(currentIndex + 1, currentPlaylist);
+                return playSong(currentIndex + 1, currentPlaylist);
+            } else if (playbackMode === 'repeat-all' || playbackMode === 'repeat-one') {
+                if (currentPlaylist.length === 1) return restartCurrentSong();
+                return playSong(0, currentPlaylist);
+            } else if (automatic) {
+                isPlaying = false;
+                updatePlayButton();
+                currentCover.classList.remove('playing');
+                stopVisualization();
+                setPlaybackStatus('列表播放完毕');
             } else {
                 showNotification('已经是最后一首歌曲', 'info');
             }
@@ -1630,7 +1733,7 @@
         });
 
         audioPlayer.addEventListener('ended', () => {
-                nextSong();
+            nextSong({ automatic: true });
         });
 
         audioPlayer.addEventListener('play', () => {
@@ -1909,6 +2012,13 @@
             showNotification('收藏读取失败：本地数据损坏或浏览器禁止存储，其他功能不受影响', 'warning');
         }
         refreshFavorites();
+        let savedPlaybackMode;
+        try {
+            savedPlaybackMode = localStorage.getItem(PLAYBACK_MODE_KEY);
+        } catch (error) {
+            // Playback remains available when this browser blocks preference storage.
+        }
+        setPlaybackMode(Object.prototype.hasOwnProperty.call(PLAYBACK_MODES, savedPlaybackMode) ? savedPlaybackMode : 'sequence', { persist: false, announce: false });
         updatePlayButton();
         updateProgressAccessibility();
         document.querySelectorAll('a[href="#library"], a[href="#player"], a[href="#lyrics"]').forEach(link => {
@@ -1920,6 +2030,9 @@
         enterFullscreenPlayback('page');
 
         window.addEventListener('storage', event => {
+            if (event.key === PLAYBACK_MODE_KEY || event.key === null) {
+                setPlaybackMode(event.newValue || 'sequence', { persist: false, announce: false });
+            }
             if (event.key !== FAVORITES_KEY && event.key !== null) return;
             try {
                 favorites = readFavorites(event.newValue);
