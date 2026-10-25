@@ -23,9 +23,14 @@
         }
 
         * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+        html { height: 100%; overflow: hidden; }
         body {
             margin: 0;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             background: var(--paper);
             color: var(--ink);
             font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -266,107 +271,223 @@
             .lyrics-section { border-radius: 18px; padding: 20px; }
             .page-footer { flex-direction: column; gap: 4px; text-align: center; padding-top: 20px; font-size: 10px; }
         }
-        .playback-stage { display: contents; }
+        /* The document never scrolls. Only the open song list has a scroll region. */
+        [hidden] { display: none !important; }
+        .navbar { flex-shrink: 0; }
+        .nav-container { padding-block: 12px; }
+        .page-shell { width: 100%; max-width: 1600px; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 20px 28px; }
+        .welcome, .page-footer { display: none; }
+        .main-container { flex: 1; min-height: 0; grid-template-columns: minmax(300px, .9fr) minmax(0, 1.5fr); align-items: stretch; }
+        .content-section { grid-row: auto; min-height: 0; overflow: hidden; padding: 20px; }
+        .content-section > .section-heading { flex-shrink: 0; margin-bottom: 14px; }
+        .content-section .section-description { display: none; }
+        .search-container { margin-bottom: 16px; gap: 8px; grid-template-columns: minmax(0, 1fr) 120px auto; }
+        .search-btn { padding-inline: 13px; }
+        .search-btn span { display: none; }
+        .tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex-shrink: 0; margin-bottom: 12px; }
+        .tab-btn { min-height: 44px; padding: 7px 4px; font-size: 12px; gap: 4px; }
+        .tab-btn > i { display: none; }
+        .tab-content { min-height: 0; overflow: hidden; }
+        .list-heading { padding-bottom: 8px; }
+        .search-results { max-height: none; overscroll-behavior: contain; }
+        .empty-state, .loading, .error { min-height: 0; height: 100%; padding: 24px 10px; gap: 12px; }
+        .record-illustration { flex-shrink: 0; width: 100px; height: 100px; }
+        .record-illustration::before { inset: 30px; }
+        .record-illustration::after { top: 44px; left: 44px; }
+        .empty-state h3 { font-size: 17px; }
+        .song-item { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px; padding: 8px 2px; }
+        .song-info, .song-actions { grid-column: auto; }
+        .song-actions { gap: 0; }
+        .song-duration { display: none; }
+        .library-note { flex-shrink: 0; padding-top: 10px; font-size: 10px; }
+        .playlist-input-container { flex-direction: row; gap: 8px; margin-bottom: 10px; }
+        .playlist-input { width: 0; }
+        .playlist-help { font-size: 11px; margin-bottom: 10px; }
+        .playback-stage { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; border-radius: var(--radius); background: var(--dark); color: #f3f5ed; }
+        .playback-content { min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: stretch; gap: 20px; padding: 22px; }
+        .player-section { min-height: 0; display: flex; flex-direction: column; padding: 0; background: transparent; }
+        .player-heading { flex-shrink: 0; margin-bottom: 12px; }
+        .current-song { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+        .current-cover-container { display: flex; min-height: 0; flex: 0 1 auto; margin: 0; }
+        .current-cover { width: min(100%, 210px); height: auto; max-height: 100%; aspect-ratio: 1; object-fit: cover; }
+        .current-info { min-width: 0; max-width: 100%; flex-shrink: 0; }
+        .current-info h3 { font-size: 20px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .current-info p { font-size: 12px; margin: 5px 0 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .favorite-current { min-height: 44px; flex-shrink: 0; }
+        .lyrics-section { min-height: 0; display: flex; flex-direction: column; padding: 20px; border-color: #46614f; background: #1b352b; }
+        .lyrics-section .section-title { color: #edf2e7; }
+        .lyrics-section .section-heading { flex-shrink: 0; margin-bottom: 12px; }
+        .lyrics-kicker { color: var(--dark-muted); letter-spacing: 0; font-size: 11px; }
+        .lyrics-container { flex: 1; min-height: 0; height: auto; overflow: hidden; mask-image: linear-gradient(transparent, #000 10%, #000 90%, transparent); }
+        .lyrics-track { position: absolute; top: 0; left: 0; width: 100%; transition: transform 420ms cubic-bezier(.22, 1, .36, 1); }
+        .lyric-line { display: block; width: 100%; min-height: 44px; border: 0; border-radius: 10px; margin: 0; padding: 12px 8px; background: transparent; color: #b5c8b8; text-align: center; font: inherit; font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+        .lyric-line:hover { background: #294636; }
+        .lyric-line.active { background: #304d37; color: #e0f3cb; font-weight: 650; }
+        .lyrics-empty { height: 100%; padding: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .lyrics-empty i { color: var(--mint); }
+        .lyrics-empty p { color: #e0e9da; font-size: 15px; }
+        .lyrics-empty span { color: var(--dark-muted); font-size: 12px; }
+        .playback-footer { min-width: 0; border-top: 1px solid #45604e; padding: 12px 22px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 22px; background: #142b23; }
+        .player-controls { gap: 16px; margin: 0; }
+        .play-btn { width: 56px; height: 56px; }
+        .progress-container { min-width: 0; }
+        .playback-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; min-width: 0; }
+        .quality-container { width: auto; flex: 1; min-width: 0; justify-content: flex-start; gap: 10px; border: 0; margin: 0; padding: 0; }
+        .quality-label { font-size: 11px; }
+        .quality-select { width: 120px; min-height: 44px; }
+        .volume-container { width: 110px; margin: 0; gap: 8px; }
+        .download-container { display: flex; gap: 4px; }
+        .download-container .download-btn { width: 44px; min-height: 44px; padding: 0; background: transparent; border-color: transparent; font-size: 14px; }
+        .download-container .download-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+        .playback-stage :focus-visible { outline-color: var(--mint); }
         .fullscreen-toolbar { display: none; }
-        .fullscreen-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 22px; }
+        .fullscreen-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
         .fullscreen-mode-btn { min-width: 0; min-height: 44px; font-size: 12px; }
         .playback-stage.is-expanded {
             position: fixed;
             inset: 0;
             z-index: 1000;
-            display: grid;
-            grid-template-columns: minmax(0, 500px) minmax(0, 600px);
-            grid-template-rows: auto auto;
-            justify-content: center;
-            align-content: start;
-            align-items: start;
-            column-gap: clamp(24px, 5vw, 88px);
-            row-gap: 24px;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: auto minmax(0, 1fr) auto;
             width: 100%;
             height: 100vh;
             height: 100dvh;
             margin: 0;
-            padding: 0 max(28px, env(safe-area-inset-right, 0px)) max(32px, env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px));
-            overflow-x: hidden;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            scroll-padding-top: calc(112px + env(safe-area-inset-top, 0px));
-            scrollbar-width: thin;
-            scrollbar-color: #536f5e #142b23;
+            padding: 0;
+            border-radius: 0;
+            overflow: hidden;
             color-scheme: dark;
-            color: #f3f5ed;
             background: radial-gradient(ellipse at 20% 45%, #294b37 0, transparent 60%), #142b23;
         }
         .playback-stage:fullscreen { width: 100%; height: 100%; border: 0; }
         .playback-stage::backdrop { background: #142b23; }
         .playback-stage.is-expanded .fullscreen-toolbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            grid-column: 1 / -1;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
             min-width: 0;
-            padding: calc(18px + env(safe-area-inset-top, 0px)) 0 18px;
+            padding: calc(12px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 12px max(28px, env(safe-area-inset-left, 0px));
             border-bottom: 1px solid #45604e;
-            background: #142b23;
         }
         .playback-stage.is-expanded .fullscreen-toolbar > div { min-width: 0; }
-        .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 18px; font-weight: 550; letter-spacing: .06em; overflow-wrap: anywhere; }
+        .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 16px; font-weight: 550; letter-spacing: .06em; }
         .playback-stage.is-expanded .fullscreen-toolbar p { margin-top: 2px; color: var(--dark-muted); font-size: 12px; }
-        .playback-stage.is-expanded .fullscreen-exit { flex-shrink: 0; min-height: 44px; padding: 10px 16px; border-color: #8ca780; color: #f3f5ed; font-size: 13px; }
+        .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .toolbar-actions .download-btn { min-height: 44px; padding: 8px 14px; font-size: 12px; }
+        .queue-badge { min-width: 20px; border-radius: 5px; padding: 0 5px; background: #3a5540; color: #e0f3cb; font-size: 11px; }
         .playback-stage.is-expanded .fullscreen-entry { display: none; }
-        .playback-stage.is-expanded :focus-visible { outline-color: var(--mint); }
-        .playback-stage.is-expanded .player-section { width: 100%; padding: 8px 24px 24px; border-radius: 0; background: transparent; }
-        .playback-stage.is-expanded .player-heading { margin-bottom: 18px; }
-        .playback-stage.is-expanded .player-heading h2, .playback-stage.is-expanded .playback-status { font-size: 12px; }
-        .playback-stage.is-expanded .current-cover-container { margin-bottom: 18px; }
-        .playback-stage.is-expanded .current-cover { width: clamp(210px, 28vh, 320px); height: auto; aspect-ratio: 1; border-width: 9px; box-shadow: 0 22px 48px #071b1260; }
-        .playback-stage.is-expanded .current-info h3 { font-size: clamp(22px, 2.1vw, 30px); line-height: 1.35; }
-        .playback-stage.is-expanded .current-info p { margin: 6px 0 12px; font-size: 13px; }
-        .playback-stage.is-expanded .favorite-current, .playback-stage.is-expanded .quality-select, .playback-stage.is-expanded .download-btn { min-height: 44px; font-size: 12px; }
-        .playback-stage.is-expanded .player-controls { gap: 28px; margin: 18px 0 12px; }
-        .playback-stage.is-expanded .play-btn { width: 64px; height: 64px; }
-        .playback-stage.is-expanded .player-section .progress-container,
-        .playback-stage.is-expanded .player-section .quality-container,
-        .playback-stage.is-expanded .player-section .volume-container,
-        .playback-stage.is-expanded .player-section .download-container { width: 100%; max-width: none; }
-        .playback-stage.is-expanded .quality-container { margin-top: 18px; padding-top: 14px; }
-        .playback-stage.is-expanded .quality-select { flex: 1; width: 0; max-width: 210px; }
-        .playback-stage.is-expanded .volume-container { margin-top: 10px; margin-bottom: 14px; }
-        .playback-stage.is-expanded .lyrics-section { width: 100%; padding: clamp(22px, 3vw, 40px); border-color: #46614f; background: #1b352b; }
-        .playback-stage.is-expanded .lyrics-section .section-heading { flex-wrap: wrap; margin-bottom: 24px; }
-        .playback-stage.is-expanded .lyrics-section .section-title { font-size: 18px; }
-        .playback-stage.is-expanded .lyrics-kicker { color: var(--dark-muted); }
-        .playback-stage.is-expanded .lyrics-container { height: clamp(320px, 58vh, 660px); height: clamp(320px, 58dvh, 660px); scroll-padding-block: 20px; scrollbar-color: #647f65 transparent; }
-        .playback-stage.is-expanded .lyric-line { padding: 12px 16px; margin-bottom: 8px; color: #c0cec1; font-size: clamp(16px, 1.5vw, 21px); line-height: 1.85; }
-        .playback-stage.is-expanded .lyric-line:hover { background: #294636; }
-        .playback-stage.is-expanded .lyric-line.active { border-left-color: var(--mint); background: #304d37; color: #e0f3cb; }
-        .playback-stage.is-expanded .lyrics-empty { padding: 64px 8px; }
-        .playback-stage.is-expanded .lyrics-empty i { color: var(--mint); }
-        .playback-stage.is-expanded .lyrics-empty p { color: #e0e9da; font-size: 16px; }
-        .playback-stage.is-expanded .lyrics-empty span { color: var(--dark-muted); font-size: 12px; }
-        .playback-stage.is-expanded .notification { top: calc(88px + env(safe-area-inset-top, 0px)) !important; }
-        @media (max-width: 760px) {
-            .playback-stage.is-expanded { grid-template-columns: minmax(0, 520px); row-gap: 18px; padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); }
-            .playback-stage.is-expanded .fullscreen-toolbar { gap: 12px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); padding-bottom: 12px; }
-            .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 16px; }
-            .playback-stage.is-expanded .fullscreen-toolbar p { font-size: 11px; }
-            .playback-stage.is-expanded .fullscreen-exit { padding: 9px 12px; font-size: 12px; }
-            .playback-stage.is-expanded .player-section { padding: 4px 16px 12px; }
-            .playback-stage.is-expanded .current-cover { width: clamp(174px, 48vw, 250px); }
-            .playback-stage.is-expanded .current-info h3 { font-size: 24px; }
-            .playback-stage.is-expanded .lyrics-section { padding: 22px 16px; }
-            .playback-stage.is-expanded .lyrics-container { height: 360px; height: clamp(240px, 50dvh, 420px); }
-            .playback-stage.is-expanded .lyric-line { padding: 10px 12px; font-size: 16px; }
+        .playback-stage.is-expanded .playback-content { width: 100%; max-width: 1300px; margin: 0 auto; padding: clamp(16px, 3vh, 36px) 40px; gap: clamp(24px, 6vw, 100px); }
+        .playback-stage.is-expanded .player-heading { margin-bottom: 8px; }
+        .playback-stage.is-expanded .current-cover { width: clamp(120px, 33dvh, 340px); border-width: 9px; }
+        .playback-stage.is-expanded .current-info h3 { font-size: clamp(22px, 2.2vw, 30px); }
+        .playback-stage.is-expanded .lyrics-section { padding: clamp(16px, 3vw, 32px); }
+        .playback-stage.is-expanded .lyric-line { padding: 14px 12px; font-size: clamp(17px, 1.7vw, 23px); }
+        .playback-stage.is-expanded .playback-footer { padding: 12px max(28px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(28px, env(safe-area-inset-left, 0px)); grid-template-columns: auto minmax(0, 1fr) auto; gap: 24px; }
+        .playback-stage.is-expanded .playback-tools { grid-column: auto; }
+        .playback-stage.is-expanded .player-controls { gap: 20px; }
+        .playback-stage.is-expanded .notification { top: calc(80px + env(safe-area-inset-top, 0px)) !important; }
+        .library-backdrop { position: absolute; inset: 0; z-index: 20; border: 0; padding: 0; background: #06180fb3; cursor: pointer; }
+        .library-drawer { position: absolute; inset: 0 0 0 auto; z-index: 30; width: min(460px, 100%); display: flex; flex-direction: column; color: var(--ink); color-scheme: light; background: var(--surface); box-shadow: -20px 0 60px #06180f50; animation: drawer-in 220ms ease-out; }
+        @keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .drawer-heading { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px; border-bottom: 1px solid var(--line); }
+        .drawer-heading h2 { font-size: 17px; }
+        .drawer-heading p { color: var(--muted); font-size: 11px; }
+        .drawer-close { border: 1px solid var(--line); border-radius: 9px; min-height: 44px; padding: 8px 12px; color: var(--green); background: var(--green-soft); font-size: 12px; display: flex; align-items: center; gap: 7px; }
+        .drawer-body { flex: 1; min-height: 0; display: flex; }
+        .library-drawer .content-section { flex: 1; border: 0; border-radius: 0; padding: 18px 20px max(12px, env(safe-area-inset-bottom, 0px)); }
+        .library-drawer .content-section > .section-heading, .library-drawer .library-note { display: none; }
+        .library-drawer :focus-visible { outline-color: var(--green); }
+        .library-drawer .tab-btn { font-size: 12px; }
+        @media (max-width: 1150px) {
+            .playback-stage:not(.is-expanded) .playback-content { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: 18px; }
+            .playback-stage:not(.is-expanded) .current-song { flex-direction: row; justify-content: flex-start; gap: 12px; text-align: left; }
+            .playback-stage:not(.is-expanded) .current-cover { width: 64px; border-width: 3px; }
+            .playback-stage:not(.is-expanded) .current-info { flex: 1; }
+            .playback-stage:not(.is-expanded) .favorite-current { width: 44px; padding: 0; }
+            .playback-stage:not(.is-expanded) .favorite-label { display: none; }
+            .playback-stage.is-expanded .playback-footer { grid-template-columns: auto minmax(0, 1fr); gap: 4px 22px; }
+            .playback-stage.is-expanded .playback-tools { grid-column: 1 / -1; }
+            .playback-stage.is-expanded .quality-container { flex: 1; }
         }
-        @media (max-height: 540px) {
-            .playback-stage.is-expanded { row-gap: 16px; }
-            .playback-stage.is-expanded .fullscreen-toolbar { padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
-            .playback-stage.is-expanded .current-cover { width: 174px; }
-            .playback-stage.is-expanded .lyrics-container { height: 300px; }
+        @media (max-width: 900px) {
+            .nav-container { padding: 10px 16px; flex-wrap: nowrap; gap: 12px; }
+            .logo { margin: 0; }
+            .brand-caption, .workspace-nav a:last-child { display: none; }
+            .workspace-nav { display: flex; width: auto; gap: 4px; }
+            .workspace-nav a { padding: 8px 10px; font-size: 12px; }
+            .main-container { grid-template-columns: minmax(0, 1fr); }
+            .page-shell { padding: 12px 16px; }
+            .playback-stage:not(.is-expanded) { display: none; }
+        }
+        @media (max-width: 760px) {
+            .playback-stage.is-expanded .fullscreen-toolbar { gap: 8px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; }
+            .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 14px; }
+            .playback-stage.is-expanded .fullscreen-toolbar p { display: none; }
+            .toolbar-actions { gap: 6px; }
+            .toolbar-actions .download-btn { padding: 8px 10px; font-size: 12px; }
+            .screen-mode-label { display: none; }
+            .playback-stage.is-expanded .playback-content { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: 16px; }
+            .playback-stage.is-expanded .player-heading { display: none; }
+            .playback-stage.is-expanded .current-song { flex-direction: row; justify-content: flex-start; gap: 14px; text-align: left; }
+            .playback-stage.is-expanded .current-cover { width: 72px; border-width: 4px; }
+            .playback-stage.is-expanded .current-info { flex: 1; }
+            .playback-stage.is-expanded .current-info h3 { font-size: 19px; }
+            .playback-stage.is-expanded .favorite-current { width: 44px; padding: 0; }
+            .playback-stage.is-expanded .favorite-label { display: none; }
+            .playback-stage.is-expanded .lyrics-section { padding: 16px 12px; border-radius: 16px; }
+            .playback-stage.is-expanded .lyrics-section .section-heading { margin-bottom: 4px; }
+            .playback-stage.is-expanded .lyric-line { padding: 12px 8px; font-size: 18px; }
+            .playback-stage.is-expanded .playback-footer { padding: 4px max(16px, env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); grid-template-columns: minmax(0, 1fr); gap: 2px; }
+            .playback-stage.is-expanded .progress-container { grid-row: 1; }
+            .playback-stage.is-expanded .player-controls { grid-row: 2; gap: 32px; }
+            .playback-stage.is-expanded .playback-tools { grid-column: 1; gap: 8px; }
+            .playback-stage.is-expanded .quality-label { display: none; }
+            .playback-stage.is-expanded .quality-select { width: 118px; max-width: 100%; }
+            .playback-stage.is-expanded .volume-container { width: 80px; }
+            .search-container { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+            .source-field { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 10px; }
+            .source-field .field-label { margin: 0; }
+            .source-field .source-select { flex: 1; height: 40px; }
+            .query-field { grid-column: 1; grid-row: 1; }
+            .search-btn { grid-column: 2; grid-row: 1; }
+            .song-actions .action-btn { width: 36px; }
+        }
+        @media (max-height: 560px) and (min-width: 600px) {
+            .playback-stage.is-expanded .fullscreen-toolbar { padding-top: calc(6px + env(safe-area-inset-top, 0px)); padding-bottom: 6px; }
+            .playback-stage.is-expanded .fullscreen-toolbar p { display: none; }
+            .playback-stage.is-expanded .playback-content { grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 24px; padding: 12px 24px; }
+            .playback-stage.is-expanded .current-song { flex-direction: column; text-align: center; justify-content: center; gap: 6px; }
+            .playback-stage.is-expanded .current-cover { width: clamp(64px, 24dvh, 130px); border-width: 4px; }
+            .playback-stage.is-expanded .current-info { flex: 0 0 auto; }
+            .playback-stage.is-expanded .current-info h3 { font-size: 18px; -webkit-line-clamp: 1; }
+            .playback-stage.is-expanded .current-info p { margin-top: 2px; font-size: 11px; }
+            .playback-stage.is-expanded .favorite-current { min-height: 32px; height: 32px; }
+            .playback-stage.is-expanded .player-heading { display: none; }
+            .playback-stage.is-expanded .lyrics-section { padding: 12px; }
+            .playback-stage.is-expanded .lyric-line { padding: 8px; font-size: 17px; }
+            .playback-stage.is-expanded .playback-footer { grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; padding: 6px 20px calc(6px + env(safe-area-inset-bottom, 0px)); }
+            .playback-stage.is-expanded .player-controls, .playback-stage.is-expanded .progress-container { grid-row: auto; }
+            .playback-stage.is-expanded .player-controls { gap: 8px; }
+            .playback-stage.is-expanded .playback-tools { grid-column: auto; gap: 6px; }
+            .playback-stage.is-expanded .quality-label, .playback-stage.is-expanded .volume-container { display: none; }
+            .playback-stage.is-expanded .quality-select { width: 110px; }
+            .library-drawer .search-container { grid-template-columns: minmax(0, 1fr) 110px auto; }
+            .library-drawer .source-field { grid-column: auto; grid-row: auto; display: block; }
+            .library-drawer .source-field .field-label { margin-bottom: 5px; }
+            .library-drawer .search-btn { grid-column: auto; grid-row: auto; }
+            .library-drawer .empty-state { padding: 12px 8px; }
+            .library-drawer .record-illustration, .library-drawer .empty-eyebrow, .library-drawer .empty-state p { display: none; }
+        }
+        @media (max-width: 599px) and (max-height: 600px) {
+            .playback-stage.is-expanded .playback-content { padding-block: 8px; gap: 8px; }
+            .playback-stage.is-expanded .current-cover { width: 48px; }
+            .playback-stage.is-expanded .current-info h3 { font-size: 17px; -webkit-line-clamp: 1; }
+            .playback-stage.is-expanded .lyrics-section { padding-block: 8px; }
+        }
+        @media (max-width: 360px) {
+            .playback-stage.is-expanded .fullscreen-toolbar > div:first-child { display: none; }
+            .toolbar-actions { width: 100%; justify-content: space-between; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -436,11 +557,18 @@
                 </div>
 
                 <div class="tabs" role="group" aria-label="曲库视图">
-                    <button class="tab-btn active" data-tab="search" type="button" onclick="switchTab('search')" aria-pressed="true" aria-controls="searchTab"><i class="fas fa-search" aria-hidden="true"></i>搜索结果</button>
-                    <button class="tab-btn" data-tab="playlist" type="button" onclick="switchTab('playlist')" aria-pressed="false" aria-controls="playlistTab"><i class="fas fa-list-ul" aria-hidden="true"></i>导入歌单</button>
-                    <button class="tab-btn" id="favoritesTabBtn" data-tab="favorites" type="button" onclick="switchTab('favorites')" aria-pressed="false" aria-controls="favoritesTab"><i class="far fa-heart" aria-hidden="true"></i>我的收藏<span class="count-badge" id="favoritesCount">0</span></button>
+                    <button class="tab-btn" data-tab="queue" type="button" onclick="switchTab('queue')" aria-pressed="false" aria-controls="queueTab">待播<span class="count-badge" id="queueCount">0</span></button>
+                    <button class="tab-btn active" data-tab="search" type="button" onclick="switchTab('search')" aria-pressed="true" aria-controls="searchTab">搜索</button>
+                    <button class="tab-btn" data-tab="playlist" type="button" onclick="switchTab('playlist')" aria-pressed="false" aria-controls="playlistTab">歌单</button>
+                    <button class="tab-btn" id="favoritesTabBtn" data-tab="favorites" type="button" onclick="switchTab('favorites')" aria-pressed="false" aria-controls="favoritesTab">收藏<span class="count-badge" id="favoritesCount">0</span></button>
                 </div>
                 <div class="list-heading"><span>歌曲 / 艺人</span><span id="resultsCount" aria-live="polite">等待你的第一首歌</span></div>
+
+                <div id="queueTab" class="tab-content">
+                    <div class="search-results" id="queueResults">
+                        <div class="empty-state"><i class="fas fa-list-ul" aria-hidden="true"></i><h3>下一首，由你决定</h3><p>从搜索、歌单或收藏中播放歌曲，<br>整份列表就会加入待播队列。</p></div>
+                    </div>
+                </div>
 
                 <div id="searchTab" class="tab-content active">
                     <div class="search-results" id="searchResults" aria-live="polite">
@@ -476,8 +604,13 @@
             <div class="playback-stage" id="playbackStage" tabindex="-1">
                 <div class="fullscreen-toolbar">
                     <div><h2 id="fullscreenTitle">网页全屏</h2><p id="fullscreenDescription">仅铺满网页 · Esc 可退出</p></div>
-                    <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><i class="fas fa-compress" aria-hidden="true"></i><span>退出全屏</span></button>
+                    <div class="toolbar-actions">
+                        <button class="download-btn" id="toggleLibraryBtn" type="button" onclick="togglePlaybackLibrary()" aria-controls="playbackLibrary" aria-expanded="false"><i class="fas fa-list-ul" aria-hidden="true"></i><span>歌曲列表</span><span class="queue-badge" id="fullscreenQueueCount">0</span></button>
+                        <button class="download-btn" id="stageScreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-label="进入屏幕全屏" title="进入屏幕全屏"><i class="fas fa-expand" aria-hidden="true"></i><span class="screen-mode-label">屏幕全屏</span></button>
+                        <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><i class="fas fa-compress" aria-hidden="true"></i><span>退出</span></button>
+                    </div>
                 </div>
+            <div class="playback-content" id="playbackContent">
             <section class="player-section" id="player" aria-labelledby="playerTitle">
                 <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span></div>
                 <div class="fullscreen-entry fullscreen-actions" role="group" aria-label="播放全屏模式">
@@ -491,7 +624,17 @@
                     <div class="current-info"><h3 id="currentTitle">音乐，即将响起</h3><p id="currentArtist">在曲库中选择一首喜欢的歌</p></div>
                     <button class="favorite-current" id="favoriteCurrentBtn" type="button" onclick="toggleCurrentFavorite()" disabled aria-pressed="false" title="收藏当前歌曲"><i class="far fa-heart" aria-hidden="true"></i><span class="favorite-label">收藏这首歌</span></button>
                 </div>
+            </section>
 
+            <section class="lyrics-section" id="lyrics" aria-labelledby="lyricsTitle">
+                <div class="section-heading"><h2 class="section-title" id="lyricsTitle">歌词 <span class="sr-only">随播放同步</span></h2><span class="lyrics-kicker">自动跟随 · 点击跳转</span></div>
+                <div class="lyrics-container" id="lyricsContainer" aria-label="自动跟随的同步歌词">
+                    <div class="lyrics-empty"><i class="fas fa-quote-left" aria-hidden="true"></i><p>旋律之外，还有文字</p><span>打开歌曲列表，选一首喜欢的歌</span></div>
+                </div>
+            </section>
+            </div>
+
+            <div class="playback-footer" id="playbackFooter">
                 <div class="player-controls">
                     <button class="control-btn small" id="prevSongBtn" type="button" onclick="previousSong()" aria-label="上一首" title="上一首" disabled><i class="fas fa-step-backward" aria-hidden="true"></i></button>
                     <button class="control-btn play-btn" id="playBtn" type="button" onclick="togglePlay()" aria-label="播放" title="播放 / 暂停" disabled><i class="fas fa-play" aria-hidden="true"></i></button>
@@ -503,6 +646,7 @@
                     <div class="time-info"><span id="currentTime">0:00</span><span id="totalTime">0:00</span></div>
                 </div>
 
+                <div class="playback-tools">
                 <div class="quality-container">
                     <label class="quality-label" for="qualitySelect"><i class="fas fa-sliders-h" aria-hidden="true"></i>播放音质</label>
                     <select class="quality-select" id="qualitySelect">
@@ -515,18 +659,20 @@
                 </div>
                 <div class="volume-container"><label for="volumeSlider" class="sr-only">播放音量</label><i class="fas fa-volume-up volume-icon" aria-hidden="true"></i><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" onchange="setVolume(this.value)"></div>
                 <div class="download-container">
-                    <button class="download-btn" type="button" onclick="downloadCurrentSong()" id="downloadSongBtn" disabled><i class="fas fa-download" aria-hidden="true"></i><span>下载音乐</span></button>
-                    <button class="download-btn" type="button" onclick="downloadCurrentLyric()" id="downloadLyricBtn" disabled><i class="far fa-file-lines" aria-hidden="true"></i><span>下载歌词</span></button>
+                    <button class="download-btn" type="button" onclick="downloadCurrentSong()" id="downloadSongBtn" title="下载音乐" disabled><i class="fas fa-download" aria-hidden="true"></i><span>下载音乐</span></button>
+                    <button class="download-btn" type="button" onclick="downloadCurrentLyric()" id="downloadLyricBtn" title="下载歌词" disabled><i class="far fa-file-lines" aria-hidden="true"></i><span>下载歌词</span></button>
+                </div>
                 </div>
                 <audio id="audioPlayer" preload="metadata"></audio>
-            </section>
-
-            <section class="lyrics-section" id="lyrics" aria-labelledby="lyricsTitle">
-                <div class="section-heading"><h2 class="section-title" id="lyricsTitle">歌词 <span class="sr-only">随播放同步</span></h2><span class="lyrics-kicker">WORDS &amp; MELODY</span></div>
-                <div class="lyrics-container" id="lyricsContainer">
-                    <div class="lyrics-empty"><i class="fas fa-quote-left" aria-hidden="true"></i><p>旋律之外，还有文字</p><span>播放歌曲后，歌词将在这里同步呈现</span></div>
-                </div>
-            </section>
+            </div>
+                <button class="library-backdrop" id="libraryBackdrop" type="button" onclick="togglePlaybackLibrary(false)" aria-label="收起歌曲列表" tabindex="-1" hidden></button>
+                <aside class="library-drawer" id="playbackLibrary" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+                    <div class="drawer-heading">
+                        <div><h2 id="drawerTitle">歌曲列表</h2><p>选首歌，继续听。</p></div>
+                        <button class="drawer-close" id="closeLibraryBtn" type="button" onclick="togglePlaybackLibrary(false)"><i class="fas fa-chevron-right" aria-hidden="true"></i>收起列表</button>
+                    </div>
+                    <div class="drawer-body" id="playbackLibraryHost"></div>
+                </aside>
             </div>
         </div>
         <footer class="page-footer"><span>云音乐 · 让每一段日常，都有自己的背景音乐</span><span>音乐内容由所选来源提供</span></footer>
@@ -540,8 +686,7 @@
         let currentIndex = -1;
         let currentLyrics = [];
         let isPlaying = false;
-        let isUserScrolling = false;
-        let userScrollTimeout;
+        let highlightedLyricIndex = -2;
         let playlistData = [];
         let searchResults = [];
         let searchRequest = 0;
@@ -651,11 +796,11 @@
         }
 
         function updateCollectionSummary() {
-            const titles = { search: '发现音乐', playlist: '歌单导入', favorites: '我的收藏' };
+            const titles = { queue: '播放队列', search: '发现音乐', playlist: '歌单导入', favorites: '我的收藏' };
             const title = document.getElementById('collectionTitle');
             if (title) title.textContent = titles[activeTab];
             const count = document.getElementById('resultsCount');
-            const songs = activeTab === 'favorites' ? favorites : activeTab === 'playlist' ? playlistData : searchResults;
+            const songs = activeTab === 'queue' ? currentPlaylist : activeTab === 'favorites' ? favorites : activeTab === 'playlist' ? playlistData : searchResults;
             const status = activeTab === 'search' ? searchStatus : activeTab === 'playlist' ? playlistStatus : '';
             if (count) count.textContent = status || `${songs.length} 首歌曲`;
         }
@@ -686,6 +831,10 @@
         let fullscreenRequestPending = false;
         let fullscreenExitPending = false;
         let fullscreenSnapshot = null;
+        let playbackLibraryOpen = false;
+        const library = document.getElementById('library');
+        const libraryHome = document.createComment('Music library returns here outside fullscreen');
+        library.before(libraryHome);
         
         const canvas = document.getElementById('waveCanvas');
         const canvasCtx = canvas.getContext('2d');
@@ -809,8 +958,17 @@
         async function playSong(index, playlist, options = {}) {
             if (!playlist || index < 0 || index >= playlist.length) return;
             const request = ++playbackRequest;
+            const queueChanged = currentPlaylist.length !== playlist.length ||
+                currentPlaylist.some((song, position) => songIdentity(song) !== songIdentity(playlist[position]));
             currentPlaylist = playlist.slice();
             currentIndex = index;
+            if (queueChanged) displaySearchResults(currentPlaylist, 'queueResults');
+            document.getElementById('queueCount').textContent = currentPlaylist.length;
+            document.getElementById('fullscreenQueueCount').textContent = currentPlaylist.length;
+            document.getElementById('toggleLibraryBtn').setAttribute('aria-label', `打开歌曲列表，待播 ${currentPlaylist.length} 首歌曲`);
+            updateCollectionSummary();
+            // Keep the drawer open for repeated selections; the close control is always available.
+            if (!fullscreenExpanded && window.matchMedia('(max-width: 900px)').matches) enterFullscreenPlayback('page');
             const song = currentPlaylist[index];
             audioPlayer.pause();
             audioPlayer.removeAttribute('src');
@@ -819,6 +977,7 @@
             currentTimeSpan.textContent = '0:00';
             totalTimeSpan.textContent = '--:--';
             currentLyrics = [];
+            highlightedLyricIndex = -2;
             lyricsContainer.textContent = '正在加载歌词…';
             updateCurrentSongInfo(song, request);
             updateActiveItem();
@@ -972,8 +1131,10 @@
 
         async function updateCurrentSongInfo(song, request) {
             document.getElementById('currentTitle').textContent = song.name;
+            document.getElementById('currentTitle').title = song.name;
             document.getElementById('currentArtist').textContent =
                 `${Array.isArray(song.artist) ? song.artist.join(' / ') : song.artist} · ${song.album}`;
+            document.getElementById('currentArtist').title = document.getElementById('currentArtist').textContent;
             currentCover.removeAttribute('src');
             currentCover.alt = `${song.name}${song.album ? ` · ${song.album}` : ''} 封面`;
             const coverUrl = await getAlbumCoverUrl(song, 500);
@@ -983,7 +1144,10 @@
         function updateActiveItem() {
             const identity = songIdentity(currentPlaylist[currentIndex]);
             document.querySelectorAll('.song-item').forEach(item => {
-                item.classList.toggle('active', !!identity && item.dataset.songIdentity === identity);
+                const active = !!identity && item.dataset.songIdentity === identity;
+                item.classList.toggle('active', active);
+                if (active) item.querySelector('.song-info').setAttribute('aria-current', 'true');
+                else item.querySelector('.song-info').removeAttribute('aria-current');
             });
         }
 
@@ -1042,23 +1206,40 @@
 
         function displayLyrics() {
             lyricsContainer.innerHTML = '';
+            highlightedLyricIndex = -2;
             if (currentLyrics.length === 0) {
-                lyricsContainer.innerHTML = '<div class="lyric-line">暂无歌词</div>';
+                lyricsContainer.innerHTML = '<div class="lyrics-empty"><p>暂无歌词</p><span>让旋律继续陪着你</span></div>';
                 return;
             }
-
+            const track = document.createElement('div');
+            track.className = 'lyrics-track';
             currentLyrics.forEach((lyric, index) => {
-                const lyricLine = document.createElement('div');
+                const lyricLine = document.createElement('button');
+                lyricLine.type = 'button';
                 lyricLine.className = 'lyric-line';
                 lyricLine.textContent = lyric.text;
+                lyricLine.tabIndex = -1;
+                lyricLine.setAttribute('aria-label', `${lyric.text}，跳转至 ${formatTime(lyric.time)}`);
                 lyricLine.onclick = () => {
                     audioPlayer.currentTime = lyric.time;
+                    updateLyricHighlight(true);
                 };
-                lyricsContainer.appendChild(lyricLine);
+                lyricLine.addEventListener('keydown', event => {
+                    if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const next = Math.max(0, Math.min(currentLyrics.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)));
+                    audioPlayer.currentTime = currentLyrics[next].time;
+                    updateLyricHighlight(true);
+                    track.children[next].focus({ preventScroll: true });
+                });
+                track.appendChild(lyricLine);
             });
+            lyricsContainer.appendChild(track);
+            updateLyricHighlight(true);
         }
 
-        function updateLyricHighlight() {
+        function updateLyricHighlight(force = false) {
             const currentTime = audioPlayer.currentTime;
             let activeIndex = -1;
 
@@ -1070,29 +1251,28 @@
                 }
             }
 
-            const lyricLines = document.querySelectorAll('.lyric-line');
-            lyricLines.forEach((line, index) => {
+            if (!force && activeIndex === highlightedLyricIndex) return;
+            highlightedLyricIndex = activeIndex;
+            const track = lyricsContainer.querySelector('.lyrics-track');
+            if (!track) return;
+            const lyricLines = track.children;
+            const focusedLine = track.contains(document.activeElement);
+            const visibleIndex = Math.max(0, activeIndex);
+            [...lyricLines].forEach((line, index) => {
                 line.classList.toggle('active', index === activeIndex);
+                line.tabIndex = index === visibleIndex ? 0 : -1;
+                if (index === activeIndex) line.setAttribute('aria-current', 'true');
+                else line.removeAttribute('aria-current');
             });
-
-            if (activeIndex >= 0 && activeIndex < lyricLines.length && !isUserScrolling) {
-                const activeLine = lyricLines[activeIndex];
-                const container = document.getElementById('lyricsContainer');
-                
-                if (activeLine && container) {
-                    const containerHeight = container.clientHeight;
-                    const lineHeight = activeLine.offsetHeight;
-                    const lineOffsetTop = activeLine.offsetTop;
-                    
-                    const idealScrollTop = lineOffsetTop - (containerHeight / 2) + (lineHeight / 2);
-                    
-                    container.scrollTo({
-                        top: Math.max(0, idealScrollTop),
-                        behavior: 'smooth'
-                    });
-                }
+            const activeLine = lyricLines[visibleIndex];
+            if (activeLine) {
+                const offset = lyricsContainer.clientHeight / 2 - activeLine.offsetTop - activeLine.offsetHeight / 2;
+                track.style.transform = `translateY(${offset}px)`;
+                if (focusedLine) activeLine.focus({ preventScroll: true });
             }
         }
+
+        new ResizeObserver(() => updateLyricHighlight(true)).observe(lyricsContainer);
 
         async function togglePlay() {
             if (currentIndex < 0) {
@@ -1178,6 +1358,27 @@
             document.getElementById('fullscreenDescription').textContent = description || (mode === 'screen'
                 ? '沉浸聆听 · Esc 可退出屏幕全屏'
                 : '保留浏览器栏 · Esc 可退出网页全屏');
+            document.getElementById('stageScreenBtn').hidden = mode === 'screen';
+        }
+
+        function togglePlaybackLibrary(open = !playbackLibraryOpen) {
+            if (!fullscreenExpanded || open === playbackLibraryOpen) return;
+            playbackLibraryOpen = open;
+            document.getElementById('playbackLibrary').hidden = !open;
+            document.getElementById('libraryBackdrop').hidden = !open;
+            document.getElementById('toggleLibraryBtn').setAttribute('aria-expanded', String(open));
+            for (const element of [document.getElementById('playbackContent'), document.getElementById('playbackFooter'), playbackStage.querySelector('.fullscreen-toolbar')]) {
+                element.inert = open;
+            }
+            if (open) {
+                if (currentPlaylist.length) switchTab('queue');
+                document.getElementById('closeLibraryBtn').focus({ preventScroll: true });
+                const list = library.querySelector('.tab-content.active .search-results');
+                const current = list?.querySelector('.song-item.active');
+                if (current) list.scrollTop = current.offsetTop - list.offsetTop - list.clientHeight / 2 + current.offsetHeight / 2;
+            } else {
+                document.getElementById('toggleLibraryBtn').focus({ preventScroll: true });
+            }
         }
 
         function expandPlaybackStage() {
@@ -1192,6 +1393,8 @@
                 ])
             };
             fullscreenExpanded = true;
+            // Move the existing library, keeping inputs, results and event handlers intact.
+            document.getElementById('playbackLibraryHost').appendChild(library);
             playbackStage.classList.add('is-expanded');
             document.body.classList.add('fullscreen-playback');
             playbackStage.setAttribute('role', 'dialog');
@@ -1214,10 +1417,13 @@
             }
             playbackStage.scrollTop = 0;
             document.getElementById('exitFullscreenBtn').focus({ preventScroll: true });
+            requestAnimationFrame(() => updateLyricHighlight(true));
         }
 
         function collapsePlaybackStage() {
             if (!fullscreenExpanded) return;
+            togglePlaybackLibrary(false);
+            libraryHome.after(library);
             fullscreenExpanded = false;
             const snapshot = fullscreenSnapshot;
             fullscreenSnapshot = null;
@@ -1244,7 +1450,7 @@
         }
 
         async function enterFullscreenPlayback(mode = 'page') {
-            if (fullscreenExpanded) return;
+            if (fullscreenExpanded && (mode === 'page' || document.fullscreenElement === playbackStage)) return;
             fullscreenTargetMode = mode === 'screen' ? 'screen' : 'page';
             expandPlaybackStage();
             setPlaybackFullscreenMode('page');
@@ -1352,16 +1558,18 @@
             if (event.key === 'Escape') {
                 event.preventDefault();
                 event.stopPropagation();
-                exitFullscreenPlayback();
+                if (playbackLibraryOpen) togglePlaybackLibrary(false);
+                else exitFullscreenPlayback();
                 return;
             }
             if (event.key !== 'Tab' || event.ctrlKey || event.altKey || event.metaKey) return;
-            const controls = [...playbackStage.querySelectorAll('button, [href], input, select, textarea, [tabindex]')]
+            const focusScope = playbackLibraryOpen ? document.getElementById('playbackLibrary') : playbackStage;
+            const controls = [...focusScope.querySelectorAll('button, [href], input, select, textarea, [tabindex]')]
                 .filter(element => element.tabIndex >= 0 && !element.matches(':disabled') &&
                     !element.closest('[inert]') && element.getClientRects().length);
-            const first = controls[0] || playbackStage;
-            const last = controls[controls.length - 1] || playbackStage;
-            if (!playbackStage.contains(document.activeElement) || document.activeElement === playbackStage ||
+            const first = controls[0] || focusScope;
+            const last = controls[controls.length - 1] || focusScope;
+            if (!focusScope.contains(document.activeElement) || document.activeElement === focusScope ||
                 (event.shiftKey ? document.activeElement === first : document.activeElement === last)) {
                 event.preventDefault();
                 (event.shiftKey ? last : first).focus({ preventScroll: true });
@@ -1471,14 +1679,6 @@
             if (e.key === 'Enter') {
                 searchMusic();
             }
-        });
-
-        lyricsContainer.addEventListener('scroll', () => {
-            isUserScrolling = true;
-            clearTimeout(userScrollTimeout);
-            userScrollTimeout = setTimeout(() => {
-                isUserScrolling = false;
-            }, 2000);
         });
 
         function initAudioVisualizer() {
@@ -1642,10 +1842,12 @@
         initAudioVisualizer();
         
         function switchMobilePage(pageIndex) {
-            const selector = ['.content-section', '.player-section', '.lyrics-section'][pageIndex];
-            if (!selector) return;
-            const section = document.querySelector(selector);
-            if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (pageIndex === 0) {
+                if (fullscreenExpanded) togglePlaybackLibrary(true);
+                else document.getElementById('searchInput').focus({ preventScroll: true });
+            } else {
+                enterFullscreenPlayback('page');
+            }
         }
         
         // 添加移动端触摸支持
@@ -1709,6 +1911,13 @@
         refreshFavorites();
         updatePlayButton();
         updateProgressAccessibility();
+        document.querySelectorAll('a[href="#library"], a[href="#player"], a[href="#lyrics"]').forEach(link => {
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                switchMobilePage(link.getAttribute('href') === '#library' ? 0 : 1);
+            });
+        });
+        enterFullscreenPlayback('page');
 
         window.addEventListener('storage', event => {
             if (event.key !== FAVORITES_KEY && event.key !== null) return;
