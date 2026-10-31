@@ -346,5 +346,5 @@ Cloudflare Worker
 
 - **原版HTML代码** - 感谢 [Linux.do 论坛](https://linux.do/t/topic/925463) 提供的原版HTML音乐播放器代码
 - [Cloudflare Workers](https://workers.cloudflare.com/) - 边缘计算平台
-- [Font Awesome](https://fontawesome.com/) - 图标库
+- [Font Awesome](https://fontawesome.com/) - 图标库（Worker 版；`music.html` 已改为内联 SVG）
 - [音乐API提供方](https://music-api.gdstudio.xyz/api.php) - GD音乐台(music.gdstudio.xyz)音乐数据接口

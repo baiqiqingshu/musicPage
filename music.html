@@ -4,25 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>云音乐 - 在线音乐播放器</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             color-scheme: light;
-            --paper: #f6f5f0;
-            --surface: #fffefa;
-            --ink: #24372d;
-            --muted: #69746b;
-            --line: #e3e6dd;
-            --green: #1c6044;
-            --green-hover: #134c34;
-            --green-soft: #e9f0e6;
-            --dark: #192e26;
-            --dark-muted: #bacbc0;
-            --mint: #b6dd9b;
-            --radius: 22px;
+            --bg: #EEF0EB;
+            --surface: rgba(255,255,255,.66);
+            --surface-solid: #FFFFFF;
+            --ink: #17211C;
+            --muted: #5C6B61;
+            --line: rgba(23,33,28,.09);
+            --accent: #0E7A5B;
+            --accent-hover: #0B664D;
+            --accent-soft: #DDEEE6;
+            --danger: #B4453A;
+            --stage: #10221A;
+            --stage-2: #16291F;
+            --stage-line: rgba(255,255,255,.12);
+            --stage-ink: #EDF4EE;
+            --stage-muted: #9DB4A6;
+            --mint: #A7DFB8;
+            --radius-card: 18px;
+            --radius-ctl: 12px;
+            --radius: 18px;
+            --shadow-sm: 0 1px 2px rgba(23,33,28,.05);
+            --shadow-md: 0 6px 20px -6px rgba(23,33,28,.12), 0 2px 6px -2px rgba(23,33,28,.06);
+            --shadow-lg: 0 16px 38px -12px rgba(23,33,28,.20);
+            --ease: cubic-bezier(.22,1,.36,1);
+            --chevron-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6B61' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            --chevron-accent: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230E7A5B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            --chevron-stage: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239DB4A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         }
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: rgba(23,33,28,.24) transparent; }
+        *::-webkit-scrollbar { width: 8px; height: 8px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: rgba(23,33,28,.18); border-radius: 8px; }
+        *::-webkit-scrollbar-thumb:hover { background: rgba(23,33,28,.3); }
+        .playback-stage { scrollbar-color: rgba(255,255,255,.22) transparent; }
+        .playback-stage::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); }
+        .playback-stage::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.3); }
         html { height: 100%; overflow: hidden; }
         body {
             margin: 0;
@@ -31,7 +51,10 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: var(--paper);
+            background:
+                radial-gradient(920px 640px at 6% -12%, rgba(14,122,91,.08), transparent 62%),
+                radial-gradient(860px 620px at 98% 112%, rgba(92,107,97,.12), transparent 60%),
+                var(--bg);
             color: var(--ink);
             font: 15px/1.6 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             -webkit-font-smoothing: antialiased;
@@ -39,13 +62,18 @@
         button, input, select { font: inherit; }
         button, a, input, select { -webkit-tap-highlight-color: transparent; }
         button, select, input[type='range'] { cursor: pointer; }
-        button { transition: background-color 180ms, color 180ms, border-color 180ms; }
+        button { transition: background-color 180ms var(--ease), color 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease); }
         button:disabled { opacity: .42; cursor: not-allowed; }
         a { color: inherit; text-decoration: none; }
         h1, h2, h3, p { margin: 0; }
+        input, textarea { caret-color: var(--accent); }
+        svg { flex-shrink: 0; }
+        .ic { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ic svg { width: 18px; height: 18px; }
+        svg.spin { animation: spin 1.1s linear infinite; }
         button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
-            outline: 3px solid #4e9470;
-            outline-offset: 4px;
+            outline: 3px solid rgba(14,122,91,.45);
+            outline-offset: 3px;
         }
         .sr-only {
             position: absolute;
@@ -58,137 +86,147 @@
             white-space: nowrap;
             border: 0;
         }
-        .skip-link { position: fixed; top: -80px; left: 20px; z-index: 300; padding: 12px 20px; background: var(--green); color: white; border-radius: 8px; }
+        .skip-link { position: fixed; top: -80px; left: 20px; z-index: 300; padding: 12px 20px; background: var(--accent); color: #fff; border-radius: 10px; box-shadow: var(--shadow-md); }
         .skip-link:focus { top: 12px; }
-        .navbar { border-bottom: 1px solid var(--line); background: var(--surface); }
+        .navbar { border-bottom: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,.76), rgba(255,255,255,.58)); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); }
         .nav-container { max-width: 1380px; margin: auto; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
         .logo { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-        .brand-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: var(--green); color: white; font-size: 19px; }
+        .brand-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: linear-gradient(135deg, var(--accent), var(--mint)); color: #fff; box-shadow: var(--shadow-sm); }
+        .brand-icon svg { width: 22px; height: 22px; }
         .brand-name { display: block; font-size: 20px; letter-spacing: .08em; font-weight: 750; line-height: 1.25; }
-        .brand-caption { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .2em; color: var(--muted); }
+        .brand-caption { display: block; margin-top: 2px; font-size: 12px; letter-spacing: .2em; color: var(--muted); }
         .workspace-nav { display: flex; gap: 8px; }
-        .workspace-nav a { min-height: 44px; padding: 10px 18px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; color: var(--muted); font-size: 14px; }
-        .workspace-nav a:first-child { background: var(--green-soft); color: var(--green); }
-        .workspace-nav a:hover { background: var(--green-soft); color: var(--green); }
+        .workspace-nav a { min-height: 44px; padding: 10px 18px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; color: var(--muted); font-size: 14px; transition: background-color 180ms var(--ease), color 180ms var(--ease); }
+        .workspace-nav a svg { width: 16px; height: 16px; }
+        .workspace-nav a:first-child { background: var(--accent-soft); color: var(--accent-hover); }
+        .workspace-nav a:hover { background: var(--accent-soft); color: var(--accent-hover); }
         .nav-note { color: var(--muted); font-size: 12px; letter-spacing: .06em; }
-        .nav-note::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 9px; vertical-align: middle; }
+        .nav-note::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 9px; vertical-align: middle; }
         .page-shell { max-width: 1380px; padding: 42px 40px 30px; margin: auto; }
-        .welcome { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
-        .eyebrow { font-size: 11px; font-weight: 650; letter-spacing: .2em; color: var(--green); margin-bottom: 9px; }
-        .welcome h1 { font-size: clamp(26px, 3.2vw, 38px); font-weight: 650; letter-spacing: -.035em; line-height: 1.4; }
-        .welcome p { color: var(--muted); margin-top: 10px; font-size: 14px; }
-        .welcome-aside { text-align: right; color: var(--muted); font-size: 12px; padding-bottom: 4px; white-space: nowrap; }
-        .welcome-aside strong { display: block; color: var(--green); font-size: 13px; font-weight: 500; margin-bottom: 3px; }
         .main-container { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 22px; align-items: start; }
         .content-section, .player-section, .lyrics-section { min-width: 0; scroll-margin-top: 24px; }
-        .content-section { grid-row: span 2; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 28px; min-height: 880px; display: flex; flex-direction: column; }
+        .content-section { grid-row: span 2; background: var(--surface); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); border-radius: var(--radius-card); box-shadow: var(--shadow-md); padding: 28px; min-height: 880px; display: flex; flex-direction: column; }
+        .main-container > .content-section { transition: transform 220ms var(--ease), box-shadow 220ms var(--ease); }
+        .main-container > .content-section:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
         .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 22px; }
         .section-title { font-size: 19px; font-weight: 650; letter-spacing: -.02em; }
         .section-description { margin-top: 3px; color: var(--muted); font-size: 12px; }
-        .section-mark { color: var(--green); background: var(--green-soft); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
+        .section-mark { color: var(--accent-hover); background: var(--accent-soft); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0; }
+        .section-mark svg { width: 18px; height: 18px; }
         .search-container { display: grid; grid-template-columns: minmax(0, 1fr) 146px auto; gap: 10px; align-items: end; margin-bottom: 26px; }
         .search-field { min-width: 0; }
         .field-label { display: block; font-size: 12px; font-weight: 550; margin-bottom: 7px; color: var(--muted); }
-        .search-input, .source-select, .playlist-input { width: 100%; min-width: 0; height: 46px; border: 1px solid #cdd5cb; border-radius: 10px; background: #f9faf6; color: var(--ink); padding: 0 12px; }
+        .search-input, .source-select, .playlist-input { width: 100%; min-width: 0; height: 46px; border: 1px solid rgba(23,33,28,.14); border-radius: var(--radius-ctl); background: var(--surface-solid); color: var(--ink); padding: 0 12px; transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease); }
         .search-input, .playlist-input { cursor: text; }
-        input::placeholder { color: #7b837a; opacity: 1; }
-        .search-input:focus, .playlist-input:focus { border-color: var(--green); background: white; }
-        .source-select { font-size: 13px; padding-right: 4px; }
-        .search-btn, .playlist-btn { min-height: 46px; border: 1px solid var(--green); background: var(--green); color: white; border-radius: 10px; padding: 10px 17px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 550; white-space: nowrap; }
-        .search-btn:hover, .playlist-btn:hover { background: var(--green-hover); border-color: var(--green-hover); }
-        .tabs { display: flex; gap: 5px; padding: 5px; border-radius: 12px; background: #f0f2eb; margin-bottom: 21px; }
-        .tab-btn { flex: 1; min-width: 0; min-height: 44px; display: flex; gap: 7px; align-items: center; justify-content: center; padding: 9px 10px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: #647063; font-size: 13px; white-space: nowrap; }
-        .tab-btn.active { background: var(--surface); color: var(--green); border-color: var(--line); box-shadow: 0 2px 5px #24372d06; font-weight: 650; }
-        .tab-btn:hover:not(.active) { color: var(--green); background: #e5ebdf; }
-        .count-badge { min-width: 22px; padding: 0 6px; border-radius: 6px; font-size: 11px; line-height: 21px; background: #e0e9db; color: var(--green); font-variant-numeric: tabular-nums; }
+        input::placeholder { color: var(--muted); opacity: 1; }
+        .search-input:focus, .playlist-input:focus, .source-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+        select { appearance: none; -webkit-appearance: none; }
+        .source-select { font-size: 13px; padding-right: 32px; background-image: var(--chevron-light); background-repeat: no-repeat; background-position: right 11px center; }
+        .source-select option { background: var(--surface-solid); color: var(--ink); }
+        .search-btn, .playlist-btn { min-height: 46px; border: 1px solid var(--accent); background: var(--accent); color: #fff; border-radius: var(--radius-ctl); padding: 10px 17px; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 550; white-space: nowrap; box-shadow: var(--shadow-sm); }
+        .search-btn:hover, .playlist-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        .search-btn svg, .playlist-btn svg { width: 16px; height: 16px; }
+        .tabs { display: flex; gap: 4px; padding: 5px; border-radius: 14px; background: rgba(23,33,28,.05); margin-bottom: 21px; }
+        .tab-btn { flex: 1; min-width: 0; min-height: 44px; display: flex; gap: 7px; align-items: center; justify-content: center; padding: 9px 10px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); font-size: 13px; white-space: nowrap; }
+        .tab-btn.active { background: var(--surface-solid); color: var(--accent); box-shadow: var(--shadow-sm); font-weight: 650; }
+        .tab-btn:hover:not(.active) { color: var(--accent); background: rgba(255,255,255,.55); }
+        .count-badge { min-width: 22px; padding: 0 6px; border-radius: 999px; font-size: 12px; line-height: 21px; background: var(--accent-soft); color: var(--accent-hover); font-variant-numeric: tabular-nums; }
         .tab-content { display: none; flex: 1; min-width: 0; flex-direction: column; }
         .tab-content.active { display: flex; }
-        .list-heading { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; letter-spacing: .06em; color: var(--muted); padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
+        .list-heading { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .06em; color: var(--muted); padding: 0 10px 12px; border-bottom: 1px solid var(--line); }
         .list-heading span:last-child { letter-spacing: 0; }
-        .search-results { flex: 1; min-height: 0; max-height: 800px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ccd5c7 transparent; padding-top: 10px; }
+        .search-results { flex: 1; min-height: 0; max-height: 800px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(23,33,28,.24) transparent; padding-top: 10px; }
         .playlist-input-container { display: flex; gap: 10px; margin: 0 0 20px; }
         .playlist-input-container .playlist-input { flex: 1; }
         .playlist-help { color: var(--muted); font-size: 12px; margin: -2px 0 18px; }
-        .song-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto 38px; gap: 10px; align-items: center; border: 1px solid transparent; border-bottom-color: #eff0e9; padding: 12px 8px; border-radius: 11px; cursor: pointer; transition: background-color 180ms, border-color 180ms; }
-        .song-item:hover { background: #f2f5ec; }
-        .song-item.active { background: var(--green-soft); border-color: #c8d9bd; }
+        .song-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto 38px; gap: 10px; align-items: center; border: 1px solid transparent; border-bottom-color: var(--line); padding: 12px 8px; border-radius: var(--radius-ctl); cursor: pointer; transition: background-color 180ms var(--ease), border-color 180ms var(--ease); }
+        .song-item:hover { background: rgba(23,33,28,.045); }
+        .song-item.active { background: var(--accent-soft); border-color: rgba(14,122,91,.2); }
         .song-index { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); text-align: center; }
-        .song-item.active .song-index { color: var(--green); font-weight: 700; }
+        .song-item.active .song-index { color: var(--accent-hover); font-weight: 700; }
         .song-info { min-width: 0; min-height: 44px; padding: 0; border: 0; background: transparent; color: inherit; text-align: left; }
         .song-info > span { display: block; }
         .song-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         .song-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .song-actions { display: flex; align-items: center; gap: 3px; }
-        .action-btn { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border: none; border-radius: 9px; color: #687565; background: transparent; font-size: 13px; }
-        .action-btn:hover { color: var(--green); background: #dfe9d7; }
-        .action-btn.is-favorite { color: var(--green); background: #e3eedb; }
-        .song-duration { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+        .action-btn { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border: none; border-radius: 10px; color: var(--muted); background: transparent; font-size: 13px; }
+        .action-btn svg { width: 16px; height: 16px; }
+        .action-btn:hover { color: var(--accent-hover); background: var(--accent-soft); }
+        .action-btn.is-favorite { color: var(--accent-hover); background: var(--accent-soft); }
+        .song-duration { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
         .empty-state, .loading, .error { min-height: 360px; padding: 66px 22px 48px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; color: var(--muted); text-align: center; font-size: 14px; }
         .empty-state h3 { color: var(--ink); font-size: 20px; font-weight: 550; letter-spacing: -.02em; }
         .empty-state p { max-width: 290px; font-size: 13px; line-height: 1.9; }
-        .empty-state > i, .loading > i, .error > i { font-size: 32px; color: var(--green); }
-        .empty-eyebrow { color: var(--green); font-size: 10px; letter-spacing: .22em; margin-top: 14px; }
-        .record-illustration { position: relative; width: 166px; height: 166px; border-radius: 50%; background: repeating-radial-gradient(circle at center, #344e3d 0 2px, #2e4536 3px 4px); box-shadow: 0 14px 30px #1d3b2920; margin-bottom: 8px; }
-        .record-illustration::before { content: ''; position: absolute; inset: 50px; border: 1px solid #c2cda8; border-radius: 50%; background: #c2d3a8; }
-        .record-illustration::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; top: 77px; left: 77px; background: #344e3d; border: 3px solid #e5ebd7; }
-        .loading > i { animation: spin 1s linear infinite; }
-        .error > i { color: #a94736; }
+        .empty-state > svg, .loading > svg, .error > svg, .empty-state > .ic svg, .loading > .ic svg, .error > .ic svg { width: 32px; height: 32px; }
+        .empty-state > svg, .loading > svg, .empty-state > .ic, .loading > .ic { color: var(--accent); }
+        .error > svg, .error > .ic { color: var(--danger); }
+        .record-illustration { position: relative; width: 166px; height: 166px; border-radius: 50%; background: repeating-radial-gradient(circle at center, #1b3a2b 0 2px, #143023 3px 4px); box-shadow: var(--shadow-lg); margin-bottom: 8px; }
+        .record-illustration::before { content: ''; position: absolute; inset: 50px; border: 1px solid rgba(167,223,184,.65); border-radius: 50%; background: var(--mint); }
+        .record-illustration::after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; top: 77px; left: 77px; background: #143023; border: 3px solid #E9F4EC; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .library-note { margin-top: auto; padding-top: 24px; color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 7px; }
-        .player-section { border-radius: var(--radius); padding: 24px; background: var(--dark); color: #f3f5ed; }
+        .library-note { margin-top: auto; padding-top: 24px; color: var(--muted); font-size: 12px; display: flex; align-items: center; gap: 7px; }
+        .library-note svg { width: 13px; height: 13px; }
+        .player-section { border-radius: var(--radius); padding: 24px; background: var(--stage); color: var(--stage-ink); }
         .player-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 25px; }
         .player-heading h2 { font-size: 12px; font-weight: 500; letter-spacing: .09em; }
-        .playback-status { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--dark-muted); }
+        .playback-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--stage-muted); }
         .playback-status::before { content: ''; width: 5px; height: 5px; background: var(--mint); border-radius: 50%; }
         .current-song { text-align: center; }
         .current-cover-container { display: inline-flex; position: relative; margin-bottom: 20px; max-width: 100%; }
-        .current-cover { display: block; width: 174px; height: 174px; max-width: 100%; object-fit: cover; border-radius: 50%; border: 7px solid #30463a; box-shadow: 0 14px 24px #081a1460; }
+        .current-cover { display: block; width: 174px; height: 174px; max-width: 100%; object-fit: cover; border-radius: 50%; border: 7px solid #1e382b; box-shadow: 0 18px 32px -12px rgba(0,0,0,.55); }
         .current-cover.playing { animation: spin 24s linear infinite; }
         .current-info h3 { font-size: 19px; font-weight: 550; line-height: 1.5; overflow-wrap: anywhere; }
-        .current-info p { color: var(--dark-muted); font-size: 12px; line-height: 1.7; margin: 5px 0 14px; overflow-wrap: anywhere; }
-        .favorite-current { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #53685b; background: transparent; border-radius: 8px; color: #d1dccd; font-size: 11px; min-height: 36px; padding: 5px 12px; }
-        .favorite-current:hover:not(:disabled), .favorite-current.is-favorite { color: var(--mint); background: #2c4335; border-color: #8fa984; }
+        .current-info p { color: var(--stage-muted); font-size: 12px; line-height: 1.7; margin: 5px 0 14px; overflow-wrap: anywhere; }
+        .favorite-current { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--stage-line); background: transparent; border-radius: 10px; color: var(--stage-muted); font-size: 12px; min-height: 36px; padding: 5px 12px; }
+        .favorite-current .ic svg { width: 15px; height: 15px; }
+        .favorite-current:hover:not(:disabled), .favorite-current.is-favorite { color: var(--mint); background: rgba(167,223,184,.12); border-color: rgba(167,223,184,.4); }
         .player-controls { display: flex; justify-content: center; align-items: center; gap: 24px; margin: 22px 0 15px; }
-        .control-btn { width: 44px; height: 44px; border: 1px solid transparent; border-radius: 50%; background: transparent; color: #eef3e9; display: grid; place-items: center; font-size: 15px; }
-        .control-btn:hover:not(:disabled) { background: #354b3e; }
-        .play-btn { width: 58px; height: 58px; background: var(--mint); color: var(--dark); font-size: 18px; }
-        .play-btn:hover:not(:disabled) { background: #cce9b7; }
-        .play-btn i { margin-left: 2px; }
+        .control-btn { width: 44px; height: 44px; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--stage-ink); display: grid; place-items: center; font-size: 15px; }
+        .control-btn svg { width: 19px; height: 19px; }
+        .control-btn:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+        .play-btn { width: 58px; height: 58px; background: var(--mint); color: var(--stage); font-size: 18px; box-shadow: 0 10px 22px -10px rgba(0,0,0,.55); }
+        .play-btn .ic svg { width: 22px; height: 22px; }
+        .play-btn:hover:not(:disabled) { background: #c6eecf; }
+        .play-btn .ic-play { margin-left: 2px; }
         .progress-bar { width: 100%; height: 26px; position: relative; display: flex; align-items: center; cursor: pointer; }
-        .progress-bar::before { content: ''; position: absolute; inset: 10px 0; border-radius: 4px; background: #4a6051; }
+        .progress-bar::before { content: ''; position: absolute; inset: 10px 0; border-radius: 4px; background: rgba(255,255,255,.14); }
         .progress-fill { width: 0%; height: 6px; border-radius: 4px; position: relative; background: var(--mint); pointer-events: none; }
-        .progress-fill::after { content: ''; position: absolute; right: -4px; top: -1px; width: 8px; height: 8px; border-radius: 50%; background: #e5f1da; }
-        .time-info { display: flex; justify-content: space-between; color: var(--dark-muted); font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 1px; }
-        .quality-container { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-top: 1px solid #3a5042; margin-top: 22px; padding-top: 17px; }
-        .quality-label { color: var(--dark-muted); font-size: 12px; white-space: nowrap; display: flex; gap: 7px; align-items: center; }
-        .quality-select { max-width: 175px; min-width: 0; height: 38px; border: 1px solid #54695b; border-radius: 8px; background: #263e30; color: #edf2e7; padding: 0 8px; font-size: 11px; }
-        .quality-select option { background: var(--dark); color: white; }
+        .progress-fill::after { content: ''; position: absolute; right: -4px; top: -1px; width: 8px; height: 8px; border-radius: 50%; background: var(--stage-ink); }
+        .time-info { display: flex; justify-content: space-between; color: var(--stage-muted); font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 1px; }
+        .quality-container { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 22px; padding-top: 17px; }
+        .quality-label { color: var(--stage-muted); font-size: 12px; white-space: nowrap; display: flex; gap: 7px; align-items: center; }
+        .quality-label svg { width: 14px; height: 14px; }
+        .quality-select { max-width: 175px; min-width: 0; height: 38px; border: 1px solid var(--stage-line); border-radius: 10px; background: var(--stage-2); color: var(--stage-ink); padding: 0 30px 0 10px; font-size: 12px; background-image: var(--chevron-stage); background-repeat: no-repeat; background-position: right 9px center; }
+        .quality-select option { background: var(--stage-2); color: var(--stage-ink); }
         .volume-container { display: flex; gap: 12px; align-items: center; margin: 14px 0 17px; }
-        .volume-icon { color: var(--dark-muted); font-size: 13px; }
+        .volume-icon { color: var(--stage-muted); font-size: 13px; }
+        .volume-icon svg { width: 17px; height: 17px; }
         .volume-slider { width: 100%; min-width: 0; height: 28px; accent-color: var(--mint); }
         .download-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-        .download-btn { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid #54695b; border-radius: 9px; color: #e7eee0; background: #2a4134; font-size: 11px; padding: 8px; }
-        .download-btn:hover:not(:disabled) { background: #3c5542; border-color: #8da380; }
-        .player-section :focus-visible { outline-color: var(--mint); }
-        .lyrics-section { border: 1px solid var(--line); border-radius: var(--radius); background: #eeefe7; padding: 22px; }
+        .download-btn { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--stage-line); border-radius: 10px; color: var(--stage-ink); background: var(--stage-2); font-size: 12px; padding: 8px; }
+        .download-btn svg { width: 15px; height: 15px; }
+        .download-btn:hover:not(:disabled) { background: #1e382b; border-color: rgba(167,223,184,.4); }
+        .player-section :focus-visible { outline-color: rgba(167,223,184,.6); }
+        .lyrics-section { border: 1px solid var(--stage-line); border-radius: var(--radius); background: var(--stage-2); padding: 22px; }
         .lyrics-section .section-heading { margin-bottom: 14px; }
         .lyrics-section .section-title { font-size: 15px; }
-        .lyrics-kicker { font-size: 9px; letter-spacing: .15em; color: var(--muted); }
-        .lyrics-container { position: relative; height: 216px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #c2ceba transparent; }
-        .lyric-line { border-left: 2px solid transparent; border-radius: 4px; padding: 8px 10px; margin-bottom: 4px; color: #6d7869; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
+        .lyrics-kicker { font-size: 12px; letter-spacing: .15em; color: var(--stage-muted); }
+        .lyrics-container { position: relative; height: 216px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent; }
+        .lyric-line { border-radius: 10px; padding: 8px 10px; margin-bottom: 4px; color: var(--stage-muted); font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
         .lyric-line[onclick], .lyric-line[role='button'] { cursor: pointer; }
-        .lyric-line:hover { background: #e2e8da; }
-        .lyric-line.active { background: #e0e9d6; color: var(--green); font-weight: 650; border-left-color: var(--green); }
+        .lyric-line:hover { background: rgba(255,255,255,.07); }
+        .lyric-line.active { background: rgba(167,223,184,.16); color: var(--mint); font-weight: 650; }
         .lyrics-empty { text-align: center; padding: 43px 12px 30px; }
-        .lyrics-empty i { display: block; margin-bottom: 12px; color: #7f9276; font-size: 24px; }
-        .lyrics-empty p { font-size: 13px; color: #56644f; }
-        .lyrics-empty span { font-size: 11px; color: var(--muted); display: block; margin-top: 4px; }
-        .page-footer { display: flex; justify-content: space-between; gap: 14px; padding: 24px 4px 0; color: var(--muted); font-size: 10px; letter-spacing: .04em; }
+        .lyrics-empty svg { display: block; width: 26px; height: 26px; margin: 0 auto 12px; color: rgba(167,223,184,.75); }
+        .lyrics-empty p { font-size: 13px; color: #dce7de; }
+        .lyrics-empty span { font-size: 12px; color: var(--stage-muted); display: block; margin-top: 4px; }
         .audio-visualizer { display: none; }
-        .notification { padding: 12px 18px; background: var(--dark); color: #fff; border: 1px solid #345346; border-radius: 12px; box-shadow: 0 8px 30px #192e2630; overflow-wrap: anywhere; line-height: 1.6; }
-        .notification-error { background: #7d302c; border-color: #a45249; }
-        .notification-warning { background: #72531f; border-color: #977738; }
-        ::selection { background: #d7e7c8; color: #193e28; }
+        .notification { padding: 12px 18px; background: rgba(16,34,26,.88); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); color: var(--stage-ink); border: 1px solid var(--stage-line); border-radius: 14px; box-shadow: var(--shadow-lg); overflow-wrap: anywhere; line-height: 1.6; }
+        .notification-success { background: rgba(14,122,91,.92); border-color: rgba(167,223,184,.4); }
+        .notification-error { background: rgba(180,69,58,.92); border-color: rgba(255,255,255,.22); }
+        .notification-warning { background: rgba(133,88,36,.92); border-color: rgba(255,255,255,.2); }
+        ::selection { background: rgba(14,122,91,.18); color: var(--ink); }
+        .playback-stage ::selection { background: rgba(167,223,184,.28); color: var(--stage-ink); }
 
         @media (min-width: 1500px) { .main-container { grid-template-columns: minmax(0, 1fr) 370px; } }
         @media (max-width: 1140px) {
@@ -218,7 +256,6 @@
             .song-duration { display: block; }
             .search-btn span { display: inline; }
             .search-container { grid-template-columns: minmax(0, 1fr) 155px auto; }
-            .welcome-aside { display: none; }
         }
         @media (max-width: 640px) {
             html { scroll-padding-top: 24px; }
@@ -229,15 +266,11 @@
             .workspace-nav { width: 100%; gap: 6px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .workspace-nav a { padding: 9px 8px; font-size: 12px; min-width: 0; }
             .page-shell { padding: 27px 16px 20px; }
-            .welcome { margin-bottom: 23px; }
-            .welcome h1 { font-size: 27px; }
-            .welcome p { font-size: 12px; margin-top: 8px; }
-            .eyebrow { font-size: 10px; }
             .main-container { gap: 18px; }
             .content-section { padding: 20px 16px; border-radius: 18px; min-height: 570px; }
             .section-title { font-size: 18px; }
             .section-heading { margin-bottom: 20px; }
-            .section-description { font-size: 11px; }
+            .section-description { font-size: 12px; }
             .search-container { grid-template-columns: minmax(0, 1fr) auto; gap: 12px 8px; margin-bottom: 22px; }
             .query-field { grid-column: 1; grid-row: 1; }
             .source-field { grid-column: 1 / -1; grid-row: 2; display: flex; align-items: center; gap: 12px; }
@@ -248,9 +281,9 @@
             .search-input, .playlist-input { font-size: 16px; }
             .tabs { gap: 2px; padding: 4px; margin-bottom: 18px; }
             .tab-btn { font-size: 12px; padding: 8px 5px; gap: 5px; }
-            .tab-btn > i { display: none; }
-            .count-badge { min-width: 18px; padding: 0 4px; font-size: 10px; }
-            .list-heading { font-size: 10px; padding-left: 2px; padding-right: 2px; }
+            .tab-btn > svg, .tab-btn > .ic { display: none; }
+            .count-badge { min-width: 18px; padding: 0 4px; font-size: 12px; }
+            .list-heading { font-size: 12px; padding-left: 2px; padding-right: 2px; }
             .search-results { max-height: min(60vh, 520px); }
             .song-item { grid-template-columns: 24px minmax(0, 1fr); gap: 3px 8px; padding: 12px 6px 7px; }
             .song-info { grid-column: 2; }
@@ -264,19 +297,17 @@
             .record-illustration { transform: scale(.88); margin: -6px 0; }
             .playlist-input-container { flex-direction: column; gap: 9px; }
             .playlist-input-container .playlist-input { flex: auto; }
-            .playlist-help { font-size: 11px; }
-            .library-note { font-size: 10px; padding-top: 20px; }
+            .playlist-help { font-size: 12px; }
+            .library-note { font-size: 12px; padding-top: 20px; }
             .player-section { padding: 23px; border-radius: 18px; }
             .favorite-current { min-height: 44px; }
             .lyrics-section { border-radius: 18px; padding: 20px; }
-            .page-footer { flex-direction: column; gap: 4px; text-align: center; padding-top: 20px; font-size: 10px; }
         }
         /* The document never scrolls. Only the open song list has a scroll region. */
         [hidden] { display: none !important; }
         .navbar { flex-shrink: 0; }
         .nav-container { padding-block: 12px; }
         .page-shell { width: 100%; max-width: 1600px; flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 20px 28px; }
-        .welcome, .page-footer { display: none; }
         .main-container { flex: 1; min-height: 0; grid-template-columns: minmax(300px, .9fr) minmax(0, 1.5fr); align-items: stretch; }
         .content-section { grid-row: auto; min-height: 0; overflow: hidden; padding: 20px; }
         .content-section > .section-heading { flex-shrink: 0; margin-bottom: 14px; }
@@ -286,7 +317,7 @@
         .search-btn span { display: none; }
         .tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); flex-shrink: 0; margin-bottom: 12px; }
         .tab-btn { min-height: 44px; padding: 7px 4px; font-size: 12px; gap: 4px; }
-        .tab-btn > i { display: none; }
+        .tab-btn > svg, .tab-btn > .ic { display: none; }
         .tab-content { min-height: 0; overflow: hidden; }
         .list-heading { padding-bottom: 8px; }
         .search-results { max-height: none; overscroll-behavior: contain; }
@@ -299,11 +330,11 @@
         .song-info, .song-actions { grid-column: auto; }
         .song-actions { gap: 0; }
         .song-duration { display: none; }
-        .library-note { flex-shrink: 0; padding-top: 10px; font-size: 10px; }
+        .library-note { flex-shrink: 0; padding-top: 10px; font-size: 12px; }
         .playlist-input-container { flex-direction: row; gap: 8px; margin-bottom: 10px; }
         .playlist-input { width: 0; }
-        .playlist-help { font-size: 11px; margin-bottom: 10px; }
-        .playback-stage { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; border-radius: var(--radius); background: var(--dark); color: #f3f5ed; }
+        .playlist-help { font-size: 12px; margin-bottom: 10px; }
+        .playback-stage { min-width: 0; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto; overflow: hidden; border-radius: var(--radius); background: radial-gradient(1000px 460px at 78% -18%, rgba(255,255,255,.04), transparent 60%), var(--stage); color: var(--stage-ink); }
         .playback-content { min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: stretch; gap: 20px; padding: 22px; }
         .player-section { min-height: 0; display: flex; flex-direction: column; padding: 0; background: transparent; }
         .player-heading { flex-shrink: 0; margin-bottom: 12px; }
@@ -314,37 +345,38 @@
         .current-info h3 { font-size: 20px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .current-info p { font-size: 12px; margin: 5px 0 0; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .favorite-current { min-height: 44px; flex-shrink: 0; }
-        .lyrics-section { min-height: 0; display: flex; flex-direction: column; padding: 20px; border-color: #46614f; background: #1b352b; }
-        .lyrics-section .section-title { color: #edf2e7; }
+        .lyrics-section { min-height: 0; display: flex; flex-direction: column; padding: 20px; border-color: var(--stage-line); background: var(--stage-2); }
+        .lyrics-section .section-title { color: var(--stage-ink); }
         .lyrics-section .section-heading { flex-shrink: 0; margin-bottom: 12px; }
-        .lyrics-kicker { color: var(--dark-muted); letter-spacing: 0; font-size: 11px; }
+        .lyrics-kicker { color: var(--stage-muted); letter-spacing: 0; font-size: 12px; }
         .lyrics-container { flex: 1; min-height: 0; height: auto; overflow: hidden; mask-image: linear-gradient(transparent, #000 10%, #000 90%, transparent); }
         .lyrics-track { position: absolute; top: 0; left: 0; width: 100%; transition: transform 420ms cubic-bezier(.22, 1, .36, 1); }
-        .lyric-line { display: block; width: 100%; min-height: 44px; border: 0; border-radius: 10px; margin: 0; padding: 12px 8px; background: transparent; color: #b5c8b8; text-align: center; font: inherit; font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
-        .lyric-line:hover { background: #294636; }
-        .lyric-line.active { background: #304d37; color: #e0f3cb; font-weight: 650; }
+        .lyric-line { display: block; width: 100%; min-height: 44px; border: 0; border-radius: 10px; margin: 0; padding: 12px 8px; background: transparent; color: var(--stage-muted); text-align: center; font: inherit; font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+        .lyric-line:hover { background: rgba(255,255,255,.07); }
+        .lyric-line.active { background: rgba(167,223,184,.16); color: var(--mint); font-weight: 650; }
         .lyrics-empty { height: 100%; padding: 10px; display: flex; flex-direction: column; justify-content: center; }
-        .lyrics-empty i { color: var(--mint); }
-        .lyrics-empty p { color: #e0e9da; font-size: 15px; }
-        .lyrics-empty span { color: var(--dark-muted); font-size: 12px; }
-        .playback-footer { min-width: 0; border-top: 1px solid #45604e; padding: 12px 22px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 22px; background: #142b23; }
+        .lyrics-empty svg { color: rgba(167,223,184,.8); }
+        .lyrics-empty p { color: #dce7de; font-size: 15px; }
+        .lyrics-empty span { color: var(--stage-muted); font-size: 12px; }
+        .playback-footer { min-width: 0; border-top: 1px solid var(--stage-line); padding: 12px 22px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 22px; background: var(--stage-2); }
         .player-controls { gap: 16px; margin: 0; }
-        .playback-mode-select { width: 104px; min-width: 0; min-height: 44px; flex-shrink: 0; border: 1px solid #54695b; border-radius: 9px; padding: 0 7px; color: #edf2e7; background: #263e30; font-size: 12px; }
-        .playback-mode-select option { color: #edf2e7; background: var(--dark); }
+        .playback-mode-select { width: 104px; min-width: 0; min-height: 44px; flex-shrink: 0; border: 1px solid var(--stage-line); border-radius: 10px; padding: 0 26px 0 8px; color: var(--stage-ink); background: var(--stage-2); font-size: 12px; background-image: var(--chevron-stage); background-repeat: no-repeat; background-position: right 7px center; }
+        .playback-mode-select option { color: var(--stage-ink); background: var(--stage-2); }
         .queue-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
-        .queue-toolbar .playback-mode-select { color: var(--green); background: var(--green-soft); border-color: #c8d9bd; }
-        .queue-toolbar .playback-mode-select option { color: var(--ink); background: var(--surface); }
+        .queue-toolbar .playback-mode-select { color: var(--accent-hover); background: var(--accent-soft); border-color: rgba(14,122,91,.2); background-image: var(--chevron-accent); }
+        .queue-toolbar .playback-mode-select option { color: var(--ink); background: var(--surface-solid); }
         .play-btn { width: 56px; height: 56px; }
         .progress-container { min-width: 0; }
         .playback-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; min-width: 0; }
         .quality-container { width: auto; flex: 1; min-width: 0; justify-content: flex-start; gap: 10px; border: 0; margin: 0; padding: 0; }
-        .quality-label { font-size: 11px; }
+        .quality-label { font-size: 12px; }
         .quality-select { width: 120px; min-height: 44px; }
         .volume-container { width: 110px; margin: 0; gap: 8px; }
         .download-container { display: flex; gap: 4px; }
         .download-container .download-btn { width: 44px; min-height: 44px; padding: 0; background: transparent; border-color: transparent; font-size: 14px; }
+        .download-container .download-btn:hover:not(:disabled) { background: rgba(255,255,255,.08); border-color: transparent; }
         .download-container .download-btn span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-        .playback-stage :focus-visible { outline-color: var(--mint); }
+        .playback-stage :focus-visible { outline-color: rgba(167,223,184,.6); }
         .fullscreen-toolbar { display: none; }
         .fullscreen-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
         .fullscreen-mode-btn { min-width: 0; min-height: 44px; font-size: 12px; }
@@ -362,10 +394,10 @@
             border-radius: 0;
             overflow: hidden;
             color-scheme: dark;
-            background: radial-gradient(ellipse at 20% 45%, #294b37 0, transparent 60%), #142b23;
+            background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 32%), var(--stage);
         }
         .playback-stage:fullscreen { width: 100%; height: 100%; border: 0; }
-        .playback-stage::backdrop { background: #142b23; }
+        .playback-stage::backdrop { background: var(--stage); }
         .playback-stage.is-expanded .fullscreen-toolbar {
             display: flex;
             align-items: center;
@@ -373,14 +405,14 @@
             gap: 16px;
             min-width: 0;
             padding: calc(12px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) 12px max(28px, env(safe-area-inset-left, 0px));
-            border-bottom: 1px solid #45604e;
+            border-bottom: 1px solid var(--stage-line);
         }
         .playback-stage.is-expanded .fullscreen-toolbar > div { min-width: 0; }
         .playback-stage.is-expanded .fullscreen-toolbar h2 { font-size: 16px; font-weight: 550; letter-spacing: .06em; }
-        .playback-stage.is-expanded .fullscreen-toolbar p { margin-top: 2px; color: var(--dark-muted); font-size: 12px; }
+        .playback-stage.is-expanded .fullscreen-toolbar p { margin-top: 2px; color: var(--stage-muted); font-size: 12px; }
         .toolbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         .toolbar-actions .download-btn { min-height: 44px; padding: 8px 14px; font-size: 12px; }
-        .queue-badge { min-width: 20px; border-radius: 5px; padding: 0 5px; background: #3a5540; color: #e0f3cb; font-size: 11px; }
+        .queue-badge { min-width: 20px; border-radius: 999px; padding: 0 5px; background: rgba(167,223,184,.18); color: var(--mint); font-size: 12px; }
         .playback-stage.is-expanded .fullscreen-entry { display: none; }
         .playback-stage.is-expanded .playback-content { width: 100%; max-width: 1300px; margin: 0 auto; padding: clamp(16px, 3vh, 36px) 40px; gap: clamp(24px, 6vw, 100px); }
         .playback-stage.is-expanded .player-heading { margin-bottom: 8px; }
@@ -392,17 +424,18 @@
         .playback-stage.is-expanded .playback-tools { grid-column: auto; }
         .playback-stage.is-expanded .player-controls { gap: 20px; }
         .playback-stage.is-expanded .notification { top: calc(80px + env(safe-area-inset-top, 0px)) !important; }
-        .library-backdrop { position: absolute; inset: 0; z-index: 20; border: 0; padding: 0; background: #06180fb3; cursor: pointer; }
-        .library-drawer { position: absolute; inset: 0 0 0 auto; z-index: 30; width: min(460px, 100%); display: flex; flex-direction: column; color: var(--ink); color-scheme: light; background: var(--surface); box-shadow: -20px 0 60px #06180f50; animation: drawer-in 220ms ease-out; }
+        .library-backdrop { position: absolute; inset: 0; z-index: 20; border: 0; padding: 0; background: rgba(9,20,15,.6); cursor: pointer; }
+        .library-drawer { position: absolute; inset: 0 0 0 auto; z-index: 30; width: min(460px, 100%); display: flex; flex-direction: column; color: var(--ink); color-scheme: light; background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5); box-shadow: -24px 0 60px -24px rgba(9,20,15,.5); animation: drawer-in 220ms var(--ease); }
         @keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
         .drawer-heading { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px; border-bottom: 1px solid var(--line); }
         .drawer-heading h2 { font-size: 17px; }
-        .drawer-heading p { color: var(--muted); font-size: 11px; }
-        .drawer-close { border: 1px solid var(--line); border-radius: 9px; min-height: 44px; padding: 8px 12px; color: var(--green); background: var(--green-soft); font-size: 12px; display: flex; align-items: center; gap: 7px; }
+        .drawer-heading p { color: var(--muted); font-size: 12px; }
+        .drawer-close { border: 1px solid var(--line); border-radius: 10px; min-height: 44px; padding: 8px 12px; color: var(--accent-hover); background: var(--accent-soft); font-size: 12px; display: flex; align-items: center; gap: 7px; }
+        .drawer-close svg { width: 14px; height: 14px; }
         .drawer-body { flex: 1; min-height: 0; display: flex; }
-        .library-drawer .content-section { flex: 1; border: 0; border-radius: 0; padding: 18px 20px max(12px, env(safe-area-inset-bottom, 0px)); }
+        .library-drawer .content-section { flex: 1; border: 0; border-radius: 0; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; padding: 18px 20px max(12px, env(safe-area-inset-bottom, 0px)); }
         .library-drawer .content-section > .section-heading, .library-drawer .library-note { display: none; }
-        .library-drawer :focus-visible { outline-color: var(--green); }
+        .library-drawer :focus-visible { outline-color: rgba(14,122,91,.45); }
         .library-drawer .tab-btn { font-size: 12px; }
         @media (max-width: 1150px) {
             .playback-stage:not(.is-expanded) .playback-content { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: 18px; }
@@ -466,7 +499,7 @@
             .playback-stage.is-expanded .current-cover { width: clamp(64px, 24dvh, 130px); border-width: 4px; }
             .playback-stage.is-expanded .current-info { flex: 0 0 auto; }
             .playback-stage.is-expanded .current-info h3 { font-size: 18px; -webkit-line-clamp: 1; }
-            .playback-stage.is-expanded .current-info p { margin-top: 2px; font-size: 11px; }
+            .playback-stage.is-expanded .current-info p { margin-top: 2px; font-size: 12px; }
             .playback-stage.is-expanded .favorite-current { min-height: 32px; height: 32px; }
             .playback-stage.is-expanded .player-heading { display: none; }
             .playback-stage.is-expanded .lyrics-section { padding: 12px; }
@@ -474,7 +507,7 @@
             .playback-stage.is-expanded .playback-footer { grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; padding: 6px 20px calc(6px + env(safe-area-inset-bottom, 0px)); }
             .playback-stage.is-expanded .player-controls, .playback-stage.is-expanded .progress-container { grid-row: auto; }
             .playback-stage.is-expanded .player-controls { gap: 8px; }
-            .playback-stage.is-expanded .player-controls .playback-mode-select { width: 96px; font-size: 11px; }
+            .playback-stage.is-expanded .player-controls .playback-mode-select { width: 96px; font-size: 12px; }
             .playback-stage.is-expanded .playback-tools { grid-column: auto; gap: 6px; }
             .playback-stage.is-expanded .quality-label, .playback-stage.is-expanded .volume-container { display: none; }
             .playback-stage.is-expanded .quality-select { width: 110px; }
@@ -483,7 +516,7 @@
             .library-drawer .source-field .field-label { margin-bottom: 5px; }
             .library-drawer .search-btn { grid-column: auto; grid-row: auto; }
             .library-drawer .empty-state { padding: 12px 8px; }
-            .library-drawer .record-illustration, .library-drawer .empty-eyebrow, .library-drawer .empty-state p { display: none; }
+            .library-drawer .record-illustration, .library-drawer .empty-state p { display: none; }
         }
         @media (max-width: 599px) and (max-height: 600px) {
             .playback-stage.is-expanded .playback-content { padding-block: 8px; gap: 8px; }
@@ -507,33 +540,24 @@
     <header class="navbar">
         <div class="nav-container">
             <a class="logo" href="#library" aria-label="云音乐，返回曲库">
-                <span class="brand-icon"><i class="fas fa-wave-square" aria-hidden="true"></i></span>
+                <span class="brand-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/></svg></span>
                 <span><span class="brand-name">云音乐</span><span class="brand-caption">YOUR DAILY SOUNDTRACK</span></span>
             </a>
             <nav class="workspace-nav" aria-label="音乐工作台导航">
-                <a href="#library"><i class="fas fa-layer-group" aria-hidden="true"></i>音乐曲库</a>
-                <a href="#player"><i class="fas fa-headphones" aria-hidden="true"></i>正在播放</a>
-                <a href="#lyrics"><i class="fas fa-align-left" aria-hidden="true"></i>歌词</a>
+                <a href="#library"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>音乐曲库</a>
+                <a href="#player"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v5z"/></svg>正在播放</a>
+                <a href="#lyrics"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>歌词</a>
             </nav>
             <span class="nav-note">音乐，让日常慢下来</span>
         </div>
     </header>
 
     <main class="page-shell">
-        <section class="welcome" aria-labelledby="welcomeTitle">
-            <div>
-                <div class="eyebrow">A LITTLE MUSIC, A LITTLE ME TIME</div>
-                <h1 id="welcomeTitle">给生活，留一点旋律。</h1>
-                <p>找到想听的声音，收藏每一次心动。</p>
-            </div>
-            <div class="welcome-aside"><strong>你的私人音乐角落</strong>搜索 · 聆听 · 收藏</div>
-        </section>
-
         <div class="main-container">
             <section class="content-section" id="library" aria-labelledby="collectionTitle">
                 <div class="section-heading">
                     <div><h2 class="section-title" id="collectionTitle">音乐曲库</h2><p class="section-description">从一首歌开始，找到今天的心情。</p></div>
-                    <span class="section-mark" aria-hidden="true"><i class="fas fa-music"></i></span>
+                    <span class="section-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>
                 </div>
 
                 <div class="search-container" role="search" aria-label="搜索音乐">
@@ -559,29 +583,28 @@
                             <option value="ximalaya">喜马拉雅</option>
                         </select>
                     </div>
-                    <button class="search-btn" type="button" onclick="searchMusic()" aria-label="搜索音乐"><i class="fas fa-search" aria-hidden="true"></i><span>搜索</span></button>
+                    <button class="search-btn" type="button" onclick="searchMusic()" aria-label="搜索音乐"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><span>搜索</span></button>
                 </div>
 
                 <div class="tabs" role="group" aria-label="曲库视图">
                     <button class="tab-btn" data-tab="queue" type="button" onclick="switchTab('queue')" aria-pressed="false" aria-controls="queueTab">待播<span class="count-badge" id="queueCount">0</span></button>
-                    <button class="tab-btn active" data-tab="search" type="button" onclick="switchTab('search')" aria-pressed="true" aria-controls="searchTab">搜索</button>
+                    <button class="tab-btn" data-tab="search" type="button" onclick="switchTab('search')" aria-pressed="false" aria-controls="searchTab">搜索</button>
                     <button class="tab-btn" data-tab="playlist" type="button" onclick="switchTab('playlist')" aria-pressed="false" aria-controls="playlistTab">歌单</button>
-                    <button class="tab-btn" id="favoritesTabBtn" data-tab="favorites" type="button" onclick="switchTab('favorites')" aria-pressed="false" aria-controls="favoritesTab">收藏<span class="count-badge" id="favoritesCount">0</span></button>
+                    <button class="tab-btn active" id="favoritesTabBtn" data-tab="favorites" type="button" onclick="switchTab('favorites')" aria-pressed="true" aria-controls="favoritesTab">收藏<span class="count-badge" id="favoritesCount">0</span></button>
                 </div>
                 <div class="list-heading"><span>歌曲 / 艺人</span><span id="resultsCount" aria-live="polite">等待你的第一首歌</span></div>
 
                 <div id="queueTab" class="tab-content">
                     <div class="queue-toolbar"><label for="queueModeSelect">播放模式</label><select class="playback-mode-select" id="queueModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select></div>
                     <div class="search-results" id="queueResults">
-                        <div class="empty-state"><i class="fas fa-list-ul" aria-hidden="true"></i><h3>下一首，由你决定</h3><p>从搜索、歌单或收藏中播放歌曲，<br>整份列表就会加入待播队列。</p></div>
+                        <div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg><h3>下一首，由你决定</h3><p>从搜索、歌单或收藏中播放歌曲，<br>整份列表就会加入待播队列。</p></div>
                     </div>
                 </div>
 
-                <div id="searchTab" class="tab-content active">
+                <div id="searchTab" class="tab-content">
                     <div class="search-results" id="searchResults" aria-live="polite">
                         <div class="empty-state">
                             <div class="record-illustration" aria-hidden="true"></div>
-                            <span class="empty-eyebrow">YOUR MUSIC STARTS HERE</span>
                             <h3>好音乐，值得慢慢发现</h3>
                             <p>输入喜欢的歌曲、歌手或专辑。<br>让熟悉的旋律，陪你度过此刻。</p>
                         </div>
@@ -592,51 +615,51 @@
                     <label class="field-label" for="playlistIdInput">网易云歌单 ID</label>
                     <div class="playlist-input-container">
                         <input type="text" id="playlistIdInput" class="playlist-input" placeholder="输入歌单 ID" inputmode="numeric" aria-describedby="playlistHelp">
-                        <button class="playlist-btn" type="button" onclick="parsePlaylist()"><i class="fas fa-arrow-right" aria-hidden="true"></i>解析歌单</button>
+                        <button class="playlist-btn" type="button" onclick="parsePlaylist()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>解析歌单</button>
                     </div>
                     <p class="playlist-help" id="playlistHelp">复制网易云歌单链接中 id= 后的数字，带回整张歌单。</p>
                     <div class="search-results" id="playlistResults" aria-live="polite">
-                        <div class="empty-state"><i class="fas fa-list-ul" aria-hidden="true"></i><h3>把喜欢的歌单带过来</h3><p>输入网易云歌单 ID 并点击解析，<br>在这里继续你的音乐旅程。</p></div>
+                        <div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg><h3>把喜欢的歌单带过来</h3><p>输入网易云歌单 ID 并点击解析，<br>在这里继续你的音乐旅程。</p></div>
                     </div>
                 </div>
 
-                <div id="favoritesTab" class="tab-content">
+                <div id="favoritesTab" class="tab-content active">
                     <div class="search-results" id="favoritesResults" aria-live="polite">
-                        <div class="empty-state"><i class="far fa-heart" aria-hidden="true"></i><h3>为喜欢的声音，留个位置</h3><p>点击歌曲旁的爱心即可收藏，<br>下次打开，喜欢的音乐依然在这里。</p></div>
+                        <div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><h3>为喜欢的声音，留个位置</h3><p>点击歌曲旁的爱心即可收藏，<br>下次打开，喜欢的音乐依然在这里。</p></div>
                     </div>
                 </div>
-                <p class="library-note"><i class="fas fa-lock" aria-hidden="true"></i>收藏保存在当前浏览器，无需登录。</p>
+                <p class="library-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>收藏保存在当前浏览器，无需登录。</p>
             </section>
 
             <div class="playback-stage" id="playbackStage" tabindex="-1">
                 <div class="fullscreen-toolbar">
                     <div><h2 id="fullscreenTitle">网页全屏</h2><p id="fullscreenDescription">仅铺满网页 · Esc 可退出</p></div>
                     <div class="toolbar-actions">
-                        <button class="download-btn" id="toggleLibraryBtn" type="button" onclick="togglePlaybackLibrary()" aria-controls="playbackLibrary" aria-expanded="false"><i class="fas fa-list-ul" aria-hidden="true"></i><span>歌曲列表</span><span class="queue-badge" id="fullscreenQueueCount">0</span></button>
-                        <button class="download-btn" id="stageScreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-label="进入屏幕全屏" title="进入屏幕全屏"><i class="fas fa-expand" aria-hidden="true"></i><span class="screen-mode-label">屏幕全屏</span></button>
-                        <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><i class="fas fa-compress" aria-hidden="true"></i><span>退出</span></button>
+                        <button class="download-btn" id="toggleLibraryBtn" type="button" onclick="togglePlaybackLibrary()" aria-controls="playbackLibrary" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg><span>歌曲列表</span><span class="queue-badge" id="fullscreenQueueCount">0</span></button>
+                        <button class="download-btn" id="stageScreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-label="进入屏幕全屏" title="进入屏幕全屏"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/></svg><span class="screen-mode-label">屏幕全屏</span></button>
+                        <button class="download-btn fullscreen-exit" id="exitFullscreenBtn" type="button" onclick="exitFullscreenPlayback()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg><span>退出</span></button>
                     </div>
                 </div>
             <div class="playback-content" id="playbackContent">
             <section class="player-section" id="player" aria-labelledby="playerTitle">
                 <div class="player-heading"><h2 id="playerTitle">正在播放</h2><span class="playback-status" id="playbackStatus" role="status">等待选曲</span></div>
                 <div class="fullscreen-entry fullscreen-actions" role="group" aria-label="播放全屏模式">
-                    <button class="download-btn fullscreen-mode-btn" id="fullscreenBtn" type="button" onclick="enterFullscreenPlayback('page')" aria-controls="playbackStage" aria-expanded="false" aria-label="网页全屏，保留浏览器栏" title="网页全屏：仅铺满网页，保留浏览器栏"><i class="far fa-window-maximize" aria-hidden="true"></i><span>网页全屏</span></button>
-                    <button class="download-btn fullscreen-mode-btn" id="screenFullscreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-controls="playbackStage" aria-expanded="false" aria-label="屏幕全屏，铺满整个屏幕" title="屏幕全屏：铺满整个屏幕，隐藏浏览器栏"><i class="fas fa-expand" aria-hidden="true"></i><span>屏幕全屏</span></button>
+                    <button class="download-btn fullscreen-mode-btn" id="fullscreenBtn" type="button" onclick="enterFullscreenPlayback('page')" aria-controls="playbackStage" aria-expanded="false" aria-label="网页全屏，保留浏览器栏" title="网页全屏：仅铺满网页，保留浏览器栏"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg><span>网页全屏</span></button>
+                    <button class="download-btn fullscreen-mode-btn" id="screenFullscreenBtn" type="button" onclick="enterFullscreenPlayback('screen')" aria-controls="playbackStage" aria-expanded="false" aria-label="屏幕全屏，铺满整个屏幕" title="屏幕全屏：铺满整个屏幕，隐藏浏览器栏"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/></svg><span>屏幕全屏</span></button>
                 </div>
                 <div class="current-song">
                     <div class="current-cover-container">
                         <img class="current-cover" id="currentCover" width="174" height="174" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3CradialGradient id='r'%3E%3Cstop stop-color='%23374b38'/%3E%3Cstop offset='1' stop-color='%2321372b'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='100' cy='100' r='100' fill='url(%23r)'/%3E%3Cg fill='none' stroke='%2342583f' stroke-width='1'%3E%3Ccircle cx='100' cy='100' r='89'/%3E%3Ccircle cx='100' cy='100' r='83'/%3E%3Ccircle cx='100' cy='100' r='77'/%3E%3Ccircle cx='100' cy='100' r='71'/%3E%3Ccircle cx='100' cy='100' r='65'/%3E%3Ccircle cx='100' cy='100' r='59'/%3E%3C/g%3E%3Ccircle cx='100' cy='100' r='35' fill='%23b3c597'/%3E%3Ccircle cx='100' cy='100' r='30' fill='none' stroke='%2397ac7d'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%2321372b'/%3E%3C/svg%3E" alt="等待播放的唱片">
                     </div>
                     <div class="current-info"><h3 id="currentTitle">音乐，即将响起</h3><p id="currentArtist">在曲库中选择一首喜欢的歌</p></div>
-                    <button class="favorite-current" id="favoriteCurrentBtn" type="button" onclick="toggleCurrentFavorite()" disabled aria-pressed="false" title="收藏当前歌曲"><i class="far fa-heart" aria-hidden="true"></i><span class="favorite-label">收藏这首歌</span></button>
+                    <button class="favorite-current" id="favoriteCurrentBtn" type="button" onclick="toggleCurrentFavorite()" disabled aria-pressed="false" title="收藏当前歌曲"><span class="ic" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></span><span class="favorite-label">收藏这首歌</span></button>
                 </div>
             </section>
 
             <section class="lyrics-section" id="lyrics" aria-labelledby="lyricsTitle">
                 <div class="section-heading"><h2 class="section-title" id="lyricsTitle">歌词 <span class="sr-only">随播放同步</span></h2><span class="lyrics-kicker">自动跟随 · 点击跳转</span></div>
                 <div class="lyrics-container" id="lyricsContainer" aria-label="自动跟随的同步歌词">
-                    <div class="lyrics-empty"><i class="fas fa-quote-left" aria-hidden="true"></i><p>旋律之外，还有文字</p><span>打开歌曲列表，选一首喜欢的歌</span></div>
+                    <div class="lyrics-empty"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg><p>旋律之外，还有文字</p><span>打开歌曲列表，选一首喜欢的歌</span></div>
                 </div>
             </section>
             </div>
@@ -646,9 +669,9 @@
                     <label for="playbackModeSelect" class="sr-only">播放模式</label>
                     <select class="playback-mode-select" id="playbackModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)" title="顺序播放：按列表顺序播放，播完后停止"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select>
                     <span id="playbackModeStatus" class="sr-only" role="status" aria-live="polite"></span>
-                    <button class="control-btn small" id="prevSongBtn" type="button" onclick="previousSong()" aria-label="上一首" title="上一首" disabled><i class="fas fa-step-backward" aria-hidden="true"></i></button>
-                    <button class="control-btn play-btn" id="playBtn" type="button" onclick="togglePlay()" aria-label="播放" title="播放 / 暂停" disabled><i class="fas fa-play" aria-hidden="true"></i></button>
-                    <button class="control-btn small" id="nextSongBtn" type="button" onclick="nextSong()" aria-label="下一首" title="下一首" disabled><i class="fas fa-step-forward" aria-hidden="true"></i></button>
+                    <button class="control-btn small" id="prevSongBtn" type="button" onclick="previousSong()" aria-label="上一首" title="上一首" disabled><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></svg></button>
+                    <button class="control-btn play-btn" id="playBtn" type="button" onclick="togglePlay()" aria-label="播放" title="播放 / 暂停" disabled><span class="ic" aria-hidden="true"><svg class="ic-play" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></span></button>
+                    <button class="control-btn small" id="nextSongBtn" type="button" onclick="nextSong()" aria-label="下一首" title="下一首" disabled><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg></button>
                 </div>
 
                 <div class="progress-container">
@@ -658,7 +681,7 @@
 
                 <div class="playback-tools">
                 <div class="quality-container">
-                    <label class="quality-label" for="qualitySelect"><i class="fas fa-sliders-h" aria-hidden="true"></i>播放音质</label>
+                    <label class="quality-label" for="qualitySelect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>播放音质</label>
                     <select class="quality-select" id="qualitySelect">
                         <option value="128">标准 128K</option>
                         <option value="192">较高 192K</option>
@@ -667,10 +690,10 @@
                         <option value="999">Hi-Res</option>
                     </select>
                 </div>
-                <div class="volume-container"><label for="volumeSlider" class="sr-only">播放音量</label><i class="fas fa-volume-up volume-icon" aria-hidden="true"></i><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" onchange="setVolume(this.value)"></div>
+                <div class="volume-container"><label for="volumeSlider" class="sr-only">播放音量</label><span class="ic volume-icon" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></span><input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80" onchange="setVolume(this.value)"></div>
                 <div class="download-container">
-                    <button class="download-btn" type="button" onclick="downloadCurrentSong()" id="downloadSongBtn" title="下载音乐" disabled><i class="fas fa-download" aria-hidden="true"></i><span>下载音乐</span></button>
-                    <button class="download-btn" type="button" onclick="downloadCurrentLyric()" id="downloadLyricBtn" title="下载歌词" disabled><i class="far fa-file-lines" aria-hidden="true"></i><span>下载歌词</span></button>
+                    <button class="download-btn" type="button" onclick="downloadCurrentSong()" id="downloadSongBtn" title="下载音乐" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg><span>下载音乐</span></button>
+                    <button class="download-btn" type="button" onclick="downloadCurrentLyric()" id="downloadLyricBtn" title="下载歌词" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg><span>下载歌词</span></button>
                 </div>
                 </div>
                 <audio id="audioPlayer" preload="metadata"></audio>
@@ -679,18 +702,52 @@
                 <aside class="library-drawer" id="playbackLibrary" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
                     <div class="drawer-heading">
                         <div><h2 id="drawerTitle">歌曲列表</h2><p>选首歌，继续听。</p></div>
-                        <button class="drawer-close" id="closeLibraryBtn" type="button" onclick="togglePlaybackLibrary(false)"><i class="fas fa-chevron-right" aria-hidden="true"></i>收起列表</button>
+                        <button class="drawer-close" id="closeLibraryBtn" type="button" onclick="togglePlaybackLibrary(false)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>收起列表</button>
                     </div>
                     <div class="drawer-body" id="playbackLibraryHost"></div>
                 </aside>
             </div>
         </div>
-        <footer class="page-footer"><span>云音乐 · 让每一段日常，都有自己的背景音乐</span><span>音乐内容由所选来源提供</span></footer>
     </main>
 
     <div class="audio-visualizer" aria-hidden="true"><canvas id="waveCanvas"></canvas></div>
 
     <script>
+        const SVG_OPEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+        const ICONS = {
+            'audio-lines': SVG_OPEN + '<path d="M2 13a2 2 0 0 0 2-2V7a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0V4a2 2 0 0 1 4 0v13a2 2 0 0 0 4 0v-4a2 2 0 0 1 2-2"/></svg>',
+            'layers': SVG_OPEN + '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+            'headphones': SVG_OPEN + '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v5z"/></svg>',
+            'align-left': SVG_OPEN + '<line x1="21" x2="3" y1="6" y2="6"/><line x1="15" x2="3" y1="12" y2="12"/><line x1="17" x2="3" y1="18" y2="18"/></svg>',
+            'music': SVG_OPEN + '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+            'search': SVG_OPEN + '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+            'list-ul': SVG_OPEN + '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>',
+            'list-music': SVG_OPEN + '<path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg>',
+            'heart': SVG_OPEN + '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+            'heart-filled': '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+            'arrow-right': SVG_OPEN + '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+            'lock': SVG_OPEN + '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+            'expand': SVG_OPEN + '<path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8"/><path d="M3 16.2V21m0 0h4.8M3 21l6-6"/><path d="M21 7.8V3m0 0h-4.8M21 3l-6 6"/><path d="M3 7.8V3m0 0h4.8M3 3l6 6"/></svg>',
+            'shrink': SVG_OPEN + '<path d="m15 15 6 6m-6-6v4.8m0-4.8h4.8"/><path d="M9 19.8V15m0 0H4.2M9 15l-6 6"/><path d="M15 4.2V9m0 0h4.8M15 9l6-6"/><path d="M9 4.2V9m0 0H4.2M9 9 3 3"/></svg>',
+            'window-maximize': SVG_OPEN + '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
+            'skip-back': SVG_OPEN + '<polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></svg>',
+            'skip-forward': SVG_OPEN + '<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>',
+            'play': '<svg class="ic-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+            'pause': SVG_OPEN + '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>',
+            'sliders-horizontal': SVG_OPEN + '<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>',
+            'volume-x': SVG_OPEN + '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" x2="17" y1="9" y2="15"/><line x1="17" x2="23" y1="9" y2="15"/></svg>',
+            'volume-1': SVG_OPEN + '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+            'volume-2': SVG_OPEN + '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+            'download': SVG_OPEN + '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>',
+            'file-text': SVG_OPEN + '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>',
+            'chevron-right': SVG_OPEN + '<path d="m9 18 6-6-6-6"/></svg>',
+            'quote-left': SVG_OPEN + '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>',
+            'loader': '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" x2="12" y1="2" y2="6"/><line x1="12" x2="12" y1="18" y2="22"/><line x1="4.93" x2="7.76" y1="4.93" y2="7.76"/><line x1="16.24" x2="19.07" y1="16.24" y2="19.07"/><line x1="2" x2="6" y1="12" y2="12"/><line x1="18" x2="22" y1="12" y2="12"/><line x1="4.93" x2="7.76" y1="19.07" y2="16.24"/><line x1="16.24" x2="19.07" y1="7.76" y2="4.93"/></svg>'
+        };
+        function setIcon(el, name) {
+            if (el && ICONS[name]) el.innerHTML = ICONS[name];
+        }
+
          const API_BASE = 'https://music-api.gdstudio.xyz/api.php';
         let currentPlaylist = [];
         let currentIndex = -1;
@@ -704,7 +761,7 @@
         let searchStatus = '';
         let playlistStatus = '';
         let playbackRequest = 0;
-        let activeTab = 'search';
+        let activeTab = 'favorites';
         const FAVORITES_KEY = 'musicPage.favorites.v1';
         let favorites = [];
         const PLAYBACK_MODE_KEY = 'musicPage.playbackMode.v1';
@@ -771,8 +828,8 @@
             button.setAttribute('aria-pressed', String(selected));
             button.setAttribute('aria-label', label);
             button.title = label;
-            const icon = button.querySelector('i');
-            if (icon) icon.className = selected ? 'fas fa-heart' : 'far fa-heart';
+            const icon = button.querySelector('.ic');
+            if (icon) setIcon(icon, selected ? 'heart-filled' : 'heart');
             const text = button.querySelector('.favorite-label');
             if (text) text.textContent = selected ? '已收藏' : '收藏歌曲';
         }
@@ -788,7 +845,7 @@
                 button.setAttribute('aria-pressed', String(selected));
                 button.title = selected ? '取消收藏' : '收藏歌曲';
                 button.setAttribute('aria-label', button.title);
-                button.querySelector('i').className = selected ? 'fas fa-heart' : 'far fa-heart';
+                setIcon(button.querySelector('.ic'), selected ? 'heart-filled' : 'heart');
             });
             updateFavoriteButton(document.getElementById('favoriteCurrentBtn'), currentPlaylist[currentIndex]);
             updateCollectionSummary();
@@ -830,8 +887,10 @@
             container.replaceChildren();
             const state = document.createElement('div');
             state.className = loading ? 'loading' : 'empty-state';
-            const icon = document.createElement('i');
-            icon.className = loading ? 'fas fa-spinner fa-spin' : 'fas fa-music';
+            const icon = document.createElement('span');
+            icon.className = 'ic';
+            icon.setAttribute('aria-hidden', 'true');
+            setIcon(icon, loading ? 'loader' : 'music');
             const text = document.createElement('div');
             text.textContent = message;
             state.append(icon, text);
@@ -946,14 +1005,16 @@
                 info.append(name, artist);
                 const actions = document.createElement('div');
                 actions.className = 'song-actions';
-                const action = (label, iconClass, handler, extraClass = '') => {
+                const action = (label, iconName, handler, extraClass = '') => {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = `action-btn ${extraClass}`.trim();
                     button.title = label;
                     button.setAttribute('aria-label', label);
-                    const icon = document.createElement('i');
-                    icon.className = iconClass;
+                    const icon = document.createElement('span');
+                    icon.className = 'ic';
+                    icon.setAttribute('aria-hidden', 'true');
+                    setIcon(icon, iconName);
                     button.appendChild(icon);
                     button.onclick = event => {
                         event.stopPropagation();
@@ -962,11 +1023,11 @@
                     actions.appendChild(button);
                     return button;
                 };
-                const favorite = action('收藏歌曲', 'far fa-heart', () => toggleFavorite(song), 'favorite-btn');
+                const favorite = action('收藏歌曲', 'heart', () => toggleFavorite(song), 'favorite-btn');
                 favorite.dataset.songIdentity = songIdentity(song);
                 updateFavoriteButton(favorite, song);
-                action('下载音乐', 'fas fa-download', () => downloadSong(song));
-                action('下载歌词', 'fas fa-file-text', () => downloadLyric(song));
+                action('下载音乐', 'download', () => downloadSong(song));
+                action('下载歌词', 'file-text', () => downloadLyric(song));
                 const duration = document.createElement('div');
                 duration.className = 'song-duration';
                 duration.textContent = song.source;
@@ -1175,7 +1236,7 @@
         }
 
         function updatePlayButton() {
-            playBtn.querySelector('i').className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+            setIcon(playBtn.querySelector('.ic'), isPlaying ? 'pause' : 'play');
             playBtn.title = isPlaying ? '暂停' : '播放';
             playBtn.setAttribute('aria-label', playBtn.title);
         }
@@ -1441,11 +1502,11 @@
             
             const volumeIcon = document.querySelector('.volume-icon');
             if (value == 0) {
-                volumeIcon.className = 'fas fa-volume-mute volume-icon';
+                setIcon(volumeIcon, 'volume-x');
             } else if (value < 50) {
-                volumeIcon.className = 'fas fa-volume-down volume-icon';
+                setIcon(volumeIcon, 'volume-1');
             } else {
-                volumeIcon.className = 'fas fa-volume-up volume-icon';
+                setIcon(volumeIcon, 'volume-2');
             }
         }
 
