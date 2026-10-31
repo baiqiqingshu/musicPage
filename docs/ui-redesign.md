@@ -65,7 +65,7 @@
 | 主卡（曲库） | 磨砂玻璃卡，shadow-md；悬停时 translateY(-2px) + shadow-lg |
 | 按钮 | 主按钮 = accent 实色白字；次按钮 = 描边/幽灵；**无渐变**；44px 触控高 |
 | Tabs | 磨砂胶囊容器；激活项 = 实色白底 + 轻投影；默认激活「收藏」 |
-| 输入框/下拉 | 实底圆角；`appearance:none` + SVG 下拉箭头（data-URI）；聚焦环；`option` 显式配色（含深色下拉） |
+| 输入框/下拉 | 输入框实底圆角 + 聚焦环；下拉为自绘弹层 `buildUiSelect`（原生 select 隐藏保留数据层，圆角玻璃面板 + check 标记 + 键盘导航）；播放模式为图标循环按钮 |
 | 歌曲行 | 圆角行；hover 浅底；当前播放行 accent-soft 底；操作钮 hover 浮出 accent-soft 底 |
 | 播放台 | 深墨绿实底（可保留极轻径向提亮作品牌区质感）；控件玻璃化；播放键 mint 实色大圆钮 |
 | 抽屉/通知 | 磨砂玻璃 + 阴影；通知保留 type 色变体（success/error/warning/info） |

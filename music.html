@@ -201,7 +201,14 @@
         .volume-container { display: flex; gap: 12px; align-items: center; margin: 14px 0 17px; }
         .volume-icon { color: var(--stage-muted); font-size: 13px; }
         .volume-icon svg { width: 17px; height: 17px; }
-        .volume-slider { width: 100%; min-width: 0; height: 28px; accent-color: var(--mint); }
+        .volume-slider { width: 100%; min-width: 0; height: 28px; accent-color: var(--mint); appearance: none; -webkit-appearance: none; background: transparent; }
+        .volume-slider::-webkit-slider-runnable-track { height: 4px; border-radius: 4px; background: rgba(255,255,255,.14); }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; background: var(--mint); border: 2px solid var(--stage); margin-top: -5px; transition: transform 160ms var(--ease); }
+        .volume-slider:hover::-webkit-slider-thumb, .volume-slider:focus-visible::-webkit-slider-thumb { transform: scale(1.18); }
+        .volume-slider::-moz-range-track { height: 4px; border-radius: 4px; background: rgba(255,255,255,.14); }
+        .volume-slider::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--mint); }
+        .volume-slider::-moz-range-thumb { box-sizing: border-box; width: 14px; height: 14px; border-radius: 50%; background: var(--mint); border: 2px solid var(--stage); transition: transform 160ms var(--ease); }
+        .volume-slider:hover::-moz-range-thumb, .volume-slider:focus-visible::-moz-range-thumb { transform: scale(1.18); }
         .download-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
         .download-btn { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--stage-line); border-radius: 10px; color: var(--stage-ink); background: var(--stage-2); font-size: 12px; padding: 8px; }
         .download-btn svg { width: 15px; height: 15px; }
@@ -227,6 +234,31 @@
         .notification-warning { background: rgba(133,88,36,.92); border-color: rgba(255,255,255,.2); }
         ::selection { background: rgba(14,122,91,.18); color: var(--ink); }
         .playback-stage ::selection { background: rgba(167,223,184,.28); color: var(--stage-ink); }
+
+        .ui-select { position: relative; display: block; }
+        .ui-select-btn { cursor: pointer; text-align: left; display: flex; align-items: center; gap: 8px; background-image: none; }
+        .ui-select-btn.source-select { padding-right: 14px; }
+        .ui-select-btn.quality-select { padding-right: 12px; }
+        .ui-select-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ui-select-btn > .ic { margin-left: auto; color: var(--muted); }
+        .ui-select-btn > .ic svg { width: 15px; height: 15px; }
+        .ui-select-pop { position: absolute; left: 0; right: 0; z-index: 60; max-height: 264px; overflow-y: auto; scrollbar-width: thin; padding: 6px; border-radius: 12px; background: var(--surface-solid); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+        .ui-select--down .ui-select-pop { top: calc(100% + 6px); }
+        .ui-select--up .ui-select-pop { bottom: calc(100% + 6px); }
+        .ui-select-opt { display: flex; width: 100%; align-items: center; gap: 8px; min-height: 40px; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; text-align: left; }
+        .ui-select-opt:hover { background: var(--accent-soft); }
+        .ui-select-opt[aria-selected="true"] { color: var(--accent-hover); }
+        .ui-select-opt-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ui-select-check { visibility: hidden; color: var(--accent-hover); }
+        .ui-select-check svg { width: 14px; height: 14px; }
+        .ui-select-opt[aria-selected="true"] .ui-select-check { visibility: visible; }
+        .playback-stage .ui-select-btn > .ic { color: var(--stage-muted); }
+        .playback-stage .ui-select-pop { background: var(--stage-2); border-color: var(--stage-line); -webkit-backdrop-filter: none; backdrop-filter: none; scrollbar-color: rgba(255,255,255,.22) transparent; }
+        .playback-stage .ui-select-opt { color: var(--stage-ink); }
+        .playback-stage .ui-select-opt:hover { background: rgba(255,255,255,.08); }
+        .playback-stage .ui-select-opt[aria-selected="true"], .playback-stage .ui-select-check { color: var(--mint); }
+        .library-drawer .ui-select-pop { max-height: 200px; }
+        .source-field .ui-select { flex: 1; min-width: 0; }
 
         @media (min-width: 1500px) { .main-container { grid-template-columns: minmax(0, 1fr) 370px; } }
         @media (max-width: 1140px) {
@@ -360,11 +392,13 @@
         .lyrics-empty span { color: var(--stage-muted); font-size: 12px; }
         .playback-footer { min-width: 0; border-top: 1px solid var(--stage-line); padding: 12px 22px 16px; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 22px; background: var(--stage-2); }
         .player-controls { gap: 16px; margin: 0; }
-        .playback-mode-select { width: 104px; min-width: 0; min-height: 44px; flex-shrink: 0; border: 1px solid var(--stage-line); border-radius: 10px; padding: 0 26px 0 8px; color: var(--stage-ink); background: var(--stage-2); font-size: 12px; background-image: var(--chevron-stage); background-repeat: no-repeat; background-position: right 7px center; }
-        .playback-mode-select option { color: var(--stage-ink); background: var(--stage-2); }
+        .mode-btn { width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center; border: 1px solid transparent; border-radius: 50%; background: transparent; color: var(--stage-ink); }
+        .mode-btn .ic svg { width: 19px; height: 19px; }
+        .mode-btn:hover:not(:disabled) { background: rgba(255,255,255,.08); }
+        .mode-btn--light { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-solid); color: var(--muted); }
+        .mode-btn--light .ic svg { width: 17px; height: 17px; }
+        .mode-btn--light:hover:not(:disabled) { background: var(--accent-soft); border-color: rgba(14,122,91,.2); color: var(--accent-hover); }
         .queue-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
-        .queue-toolbar .playback-mode-select { color: var(--accent-hover); background: var(--accent-soft); border-color: rgba(14,122,91,.2); background-image: var(--chevron-accent); }
-        .queue-toolbar .playback-mode-select option { color: var(--ink); background: var(--surface-solid); }
         .play-btn { width: 56px; height: 56px; }
         .progress-container { min-width: 0; }
         .playback-tools { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; min-width: 0; }
@@ -507,7 +541,7 @@
             .playback-stage.is-expanded .playback-footer { grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; padding: 6px 20px calc(6px + env(safe-area-inset-bottom, 0px)); }
             .playback-stage.is-expanded .player-controls, .playback-stage.is-expanded .progress-container { grid-row: auto; }
             .playback-stage.is-expanded .player-controls { gap: 8px; }
-            .playback-stage.is-expanded .player-controls .playback-mode-select { width: 96px; font-size: 12px; }
+            .playback-stage.is-expanded .player-controls .mode-btn { width: 40px; height: 40px; }
             .playback-stage.is-expanded .playback-tools { grid-column: auto; gap: 6px; }
             .playback-stage.is-expanded .quality-label, .playback-stage.is-expanded .volume-container { display: none; }
             .playback-stage.is-expanded .quality-select { width: 110px; }
@@ -566,7 +600,7 @@
                         <input type="search" class="search-input" placeholder="歌曲、歌手或专辑" id="searchInput" autocomplete="off">
                     </div>
                     <div class="search-field source-field">
-                        <label class="field-label" for="sourceSelect">音乐来源</label>
+                        <label class="field-label" for="sourceSelectBtn">音乐来源</label>
                         <select class="source-select" id="sourceSelect">
                             <option value="netease">网易云音乐</option>
                             <option value="tencent">QQ音乐</option>
@@ -595,7 +629,7 @@
                 <div class="list-heading"><span>歌曲 / 艺人</span><span id="resultsCount" aria-live="polite">等待你的第一首歌</span></div>
 
                 <div id="queueTab" class="tab-content">
-                    <div class="queue-toolbar"><label for="queueModeSelect">播放模式</label><select class="playback-mode-select" id="queueModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select></div>
+                    <div class="queue-toolbar"><label for="queueModeSelect">播放模式</label><button type="button" class="mode-btn mode-btn--light" id="queueModeSelect" data-playback-mode aria-label="播放模式"><span class="ic" aria-hidden="true"></span></button></div>
                     <div class="search-results" id="queueResults">
                         <div class="empty-state"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></svg><h3>下一首，由你决定</h3><p>从搜索、歌单或收藏中播放歌曲，<br>整份列表就会加入待播队列。</p></div>
                     </div>
@@ -667,7 +701,7 @@
             <div class="playback-footer" id="playbackFooter">
                 <div class="player-controls">
                     <label for="playbackModeSelect" class="sr-only">播放模式</label>
-                    <select class="playback-mode-select" id="playbackModeSelect" data-playback-mode onchange="setPlaybackMode(this.value)" title="顺序播放：按列表顺序播放，播完后停止"><option value="sequence">顺序播放</option><option value="repeat-all">列表循环</option><option value="repeat-one">单曲循环</option><option value="shuffle">随机播放</option></select>
+                    <button type="button" class="control-btn mode-btn" id="playbackModeSelect" data-playback-mode aria-label="播放模式"><span class="ic" aria-hidden="true"></span></button>
                     <span id="playbackModeStatus" class="sr-only" role="status" aria-live="polite"></span>
                     <button class="control-btn small" id="prevSongBtn" type="button" onclick="previousSong()" aria-label="上一首" title="上一首" disabled><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/></svg></button>
                     <button class="control-btn play-btn" id="playBtn" type="button" onclick="togglePlay()" aria-label="播放" title="播放 / 暂停" disabled><span class="ic" aria-hidden="true"><svg class="ic-play" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg></span></button>
@@ -681,7 +715,7 @@
 
                 <div class="playback-tools">
                 <div class="quality-container">
-                    <label class="quality-label" for="qualitySelect"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>播放音质</label>
+                    <label class="quality-label" for="qualitySelectBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>播放音质</label>
                     <select class="quality-select" id="qualitySelect">
                         <option value="128">标准 128K</option>
                         <option value="192">较高 192K</option>
@@ -742,10 +776,144 @@
             'file-text': SVG_OPEN + '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>',
             'chevron-right': SVG_OPEN + '<path d="m9 18 6-6-6-6"/></svg>',
             'quote-left': SVG_OPEN + '<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>',
+            'sequence': SVG_OPEN + '<line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="14" y1="12" y2="12"/><line x1="4" x2="17" y1="18" y2="18"/></svg>',
+            'repeat': SVG_OPEN + '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>',
+            'repeat-1': SVG_OPEN + '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/><path d="M11 10h1v4"/></svg>',
+            'shuffle': SVG_OPEN + '<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg>',
+            'check': SVG_OPEN + '<path d="M20 6 9 17l-5-5"/></svg>',
+            'chevron-down': SVG_OPEN + '<path d="m6 9 6 6 6-6"/></svg>',
             'loader': '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" x2="12" y1="2" y2="6"/><line x1="12" x2="12" y1="18" y2="22"/><line x1="4.93" x2="7.76" y1="4.93" y2="7.76"/><line x1="16.24" x2="19.07" y1="16.24" y2="19.07"/><line x1="2" x2="6" y1="12" y2="12"/><line x1="18" x2="22" y1="12" y2="12"/><line x1="4.93" x2="7.76" y1="19.07" y2="16.24"/><line x1="16.24" x2="19.07" y1="7.76" y2="4.93"/></svg>'
         };
         function setIcon(el, name) {
             if (el && ICONS[name]) el.innerHTML = ICONS[name];
+        }
+
+        function buildUiSelect(select, dir) {
+            if (!select) return;
+            const label = document.querySelector(`label[for="${select.id}"], label[for="${select.id}Btn"]`);
+            const wrapper = document.createElement('div');
+            wrapper.className = `ui-select ui-select--${dir === 'up' ? 'up' : 'down'}`;
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            select.hidden = true;
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `ui-select-btn ${select.className}`;
+            btn.id = `${select.id}Btn`;
+            btn.disabled = select.disabled;
+            btn.setAttribute('aria-haspopup', 'listbox');
+            btn.setAttribute('aria-expanded', 'false');
+            if (label) btn.setAttribute('aria-label', label.textContent.trim());
+            const btnText = document.createElement('span');
+            btnText.className = 'ui-select-text';
+            const btnIcon = document.createElement('span');
+            btnIcon.className = 'ic';
+            btnIcon.setAttribute('aria-hidden', 'true');
+            setIcon(btnIcon, 'chevron-down');
+            btn.append(btnText, btnIcon);
+            wrapper.appendChild(btn);
+
+            const pop = document.createElement('div');
+            pop.className = 'ui-select-pop';
+            pop.id = `${select.id}Pop`;
+            pop.setAttribute('role', 'listbox');
+            if (label) pop.setAttribute('aria-label', label.textContent.trim());
+            pop.hidden = true;
+            btn.setAttribute('aria-controls', pop.id);
+            const optionBtns = [];
+            Array.from(select.options).forEach((option, index) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'ui-select-opt';
+                item.id = `${select.id}Opt${index}`;
+                item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', 'false');
+                item.dataset.value = option.value;
+                item.tabIndex = -1;
+                const text = document.createElement('span');
+                text.className = 'ui-select-opt-text';
+                text.textContent = option.textContent;
+                const check = document.createElement('span');
+                check.className = 'ic ui-select-check';
+                check.setAttribute('aria-hidden', 'true');
+                setIcon(check, 'check');
+                item.append(text, check);
+                item.addEventListener('click', () => choose(option.value));
+                pop.appendChild(item);
+                optionBtns.push(item);
+            });
+            wrapper.appendChild(pop);
+
+            let open = false;
+            function sync() {
+                const current = select.options[select.selectedIndex];
+                btnText.textContent = current ? current.textContent : '';
+                btn.title = btnText.textContent;
+                optionBtns.forEach(item => {
+                    item.setAttribute('aria-selected', item.dataset.value === select.value ? 'true' : 'false');
+                });
+            }
+            function openPop() {
+                if (open) return;
+                open = true;
+                sync();
+                pop.hidden = false;
+                btn.setAttribute('aria-expanded', 'true');
+                const current = optionBtns.find(item => item.dataset.value === select.value) || optionBtns[0];
+                if (current) {
+                    current.focus();
+                    current.scrollIntoView({ block: 'nearest' });
+                }
+            }
+            function closePop(focusBtn = false) {
+                if (!open) return;
+                open = false;
+                pop.hidden = true;
+                btn.setAttribute('aria-expanded', 'false');
+                if (focusBtn) btn.focus();
+            }
+            function choose(value) {
+                select.value = value;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                sync();
+                closePop(true);
+            }
+            btn.addEventListener('click', () => { open ? closePop() : openPop(); });
+            btn.addEventListener('keydown', event => {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    openPop();
+                } else if (event.key === 'Escape' && open) {
+                    event.preventDefault();
+                    closePop();
+                }
+            });
+            pop.addEventListener('keydown', event => {
+                const index = optionBtns.indexOf(document.activeElement);
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closePop(true);
+                } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    const step = event.key === 'ArrowDown' ? 1 : -1;
+                    const next = optionBtns[(index + step + optionBtns.length) % optionBtns.length] || optionBtns[0];
+                    next.focus();
+                } else if (event.key === 'Home') {
+                    event.preventDefault();
+                    optionBtns[0].focus();
+                } else if (event.key === 'End') {
+                    event.preventDefault();
+                    optionBtns[optionBtns.length - 1].focus();
+                } else if (event.key === 'Tab') {
+                    closePop();
+                }
+            });
+            document.addEventListener('click', event => {
+                if (open && !wrapper.contains(event.target)) closePop();
+            });
+            select.addEventListener('change', sync);
+            sync();
         }
 
          const API_BASE = 'https://music-api.gdstudio.xyz/api.php';
@@ -771,6 +939,8 @@
             'repeat-one': { label: '单曲循环', description: '自动重播当前歌曲，仍可手动切歌' },
             shuffle: { label: '随机播放', description: '每轮随机播完所有歌曲，上一首返回播放历史' }
         };
+        const PLAYBACK_MODE_ORDER = ['sequence', 'repeat-all', 'repeat-one', 'shuffle'];
+        const MODE_ICONS = { sequence: 'sequence', 'repeat-all': 'repeat', 'repeat-one': 'repeat-1', shuffle: 'shuffle' };
         let playbackMode = 'sequence';
         let shuffleRemaining = [];
         let shuffleHistory = [];
@@ -1387,9 +1557,15 @@
             playbackMode = mode;
             if (changed) resetShuffleState();
             const { label, description } = PLAYBACK_MODES[mode];
-            document.querySelectorAll('[data-playback-mode]').forEach(select => {
-                select.value = mode;
-                select.title = `${label}：${description}`;
+            document.querySelectorAll('[data-playback-mode]').forEach(el => {
+                if (el.tagName === 'SELECT') {
+                    el.value = mode;
+                    el.title = `${label}：${description}`;
+                } else {
+                    setIcon(el.querySelector('.ic'), MODE_ICONS[mode]);
+                    el.title = `${label}：${description}`;
+                    el.setAttribute('aria-label', `播放模式：${label}`);
+                }
             });
             if (announce && changed) document.getElementById('playbackModeStatus').textContent = `${label}：${description}`;
             if (persist) {
@@ -1400,6 +1576,14 @@
                 }
             }
         }
+
+        document.querySelectorAll('[data-playback-mode]').forEach(el => {
+            if (el.tagName === 'SELECT') return;
+            el.addEventListener('click', () => {
+                const next = PLAYBACK_MODE_ORDER[(PLAYBACK_MODE_ORDER.indexOf(playbackMode) + 1) % PLAYBACK_MODE_ORDER.length];
+                setPlaybackMode(next);
+            });
+        });
 
         function resetShuffleState() {
             shuffleRemaining = currentPlaylist.map((_, index) => index).filter(index => index !== currentIndex);
@@ -2082,6 +2266,8 @@
         setPlaybackMode(Object.prototype.hasOwnProperty.call(PLAYBACK_MODES, savedPlaybackMode) ? savedPlaybackMode : 'sequence', { persist: false, announce: false });
         updatePlayButton();
         updateProgressAccessibility();
+        buildUiSelect(document.getElementById('sourceSelect'), 'down');
+        buildUiSelect(document.getElementById('qualitySelect'), 'up');
         document.querySelectorAll('a[href="#library"], a[href="#player"], a[href="#lyrics"]').forEach(link => {
             link.addEventListener('click', event => {
                 event.preventDefault();
