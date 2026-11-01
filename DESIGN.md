@@ -59,6 +59,7 @@ Restrained（克制）：中性色取自世界本身 + 一个强调色。浅区�
 - **播放模式**：图标循环按钮（顺序→列表循环→单曲循环→随机），点击切换、两处同步；深区幽灵圆钮、浅区描边方钮。图标 `sequence/repeat/repeat-1/shuffle`。
 - **下拉框**：自绘弹层组件 `buildUiSelect`（原生 `<select hidden>` 作数据层，保留 `.value`/`change`）；按钮沿用原 class 样式 + chevron 图标，弹出面板为圆角玻璃卡（浅区 surface-solid+shadow-lg / 深区 stage-2+mint 选中），option 行带 check 标记；支持方向键/Home/End/Esc/外点关闭；音质面板在舞台底部向上弹出。
 - **音量滑块**：自定义 WebKit/Moz 轨道（4px 半透明轨 + 14px mint 圆钮，hover 放大）。
+- **歌词区**：自动跟随居中（420ms）+ 可滚轮/触摸滑动浏览（拖拽 1:1、滚轮 180ms、越界 0.35 橡皮筋 + 300ms 回弹），3 秒无操作 700ms 缓动回跟；当前行 scale(1.04)+全亮、非当前行 62% 透明度；浏览时浮现「回到当前」胶囊钮。
 - **通知**：磨砂玻璃 + 类型色变体（success/error/warning/info）。
 - **浏览器面**：`::selection`、滚动条（细、浅/深区各自配色）、`caret-color`、focus-visible 3px 环（浅区 accent / 深区 mint）均出自令牌。
 
