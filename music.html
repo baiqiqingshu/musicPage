@@ -1499,11 +1499,13 @@
                 lyricLine.textContent = lyric.text;
                 lyricLine.tabIndex = -1;
                 lyricLine.setAttribute('aria-label', `${lyric.text}，跳转至 ${formatTime(lyric.time)}`);
-                lyricLine.onclick = () => {
+                const seekToLine = () => {
                     audioPlayer.currentTime = lyric.time;
                     updateLyricHighlight(true);
                     resumeLyricsFollow();
                 };
+                lyricLine.onclick = seekToLine;
+                lyricLine.ondblclick = seekToLine;
                 lyricLine.addEventListener('keydown', event => {
                     if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
                     event.preventDefault();
@@ -1621,7 +1623,6 @@
             if (lyricsDrag) return;
             clearTimeout(lyricsResumeTimer);
             lyricsDrag = { y: event.clientY, offset: lyricsViewOffset, moved: false, id: event.pointerId };
-            try { lyricsContainer.setPointerCapture(event.pointerId); } catch (err) { /* 指针捕获不可用时退化为直接拖拽 */ }
         });
 
         document.addEventListener('pointermove', event => {
@@ -1634,6 +1635,7 @@
                 lyricsContainer.classList.add('is-dragging');
                 setLyricsBrowsing(true);
                 lyricsSuppressClick = true;
+                try { lyricsContainer.setPointerCapture(event.pointerId); } catch (err) { /* 指针捕获不可用时退化为直接拖拽 */ }
             }
             const { min, max } = lyricsBounds();
             let next = drag.offset + dy;
